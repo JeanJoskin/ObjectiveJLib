@@ -38,6 +38,7 @@ imports
 import Text.PrettyPrint.HughesPJ
 import Language.JsLib.AST hiding (Ident,Number)
 import Data.List
+import Data.Maybe (isNothing)
 }
 
 {
@@ -71,6 +72,10 @@ objectBraces d | isEmpty d = lbrace <+> rbrace
 indentStmt :: Bool -> Doc -> Doc
 indentStmt isBlock d | isBlock = d
                      | otherwise = nest 4 d
+
+maybeParens :: Doc -> Doc
+maybeParens d | isEmpty d = empty
+              | otherwise = parens d
 
 -- | Pretty print a number
 prettyNum :: Number -> Doc
@@ -289,3 +294,64 @@ ATTR CaseClauses [ | | pp USE {:} {[]} : {[Doc]} ]
 SEM CaseClause [ | | pp : {Doc} ]
   | CCCase     lhs.pp = text "case" <+> @value.pp <> colon <+> foldr ($$) empty @body.pp
   | CCDefault  lhs.pp = text "default" <> colon <+> foldr ($$) empty @body.pp
+
+-------------------------------------------------------------------------------
+-- Objective J
+-------------------------------------------------------------------------------
+
+ATTR JArgs JMethodParams JImplementationElements JMembers [ | | pp USE {:} {[]} : {[Doc]} ]
+
+SEM SourceElement
+  | SEImplementation lhs.pp = text "@implementation" <+> text @ident <+>
+                                case @extends of { (Just e) -> text ":" <+> text e; _ -> empty } $+$
+                                blockBraces (vcat @members.pp) $+$
+                                vcat @body.pp $+$
+                                text "@end"
+  | SECategory lhs.pp = text "@implementation" <+> text @ident <+>
+                           parens (text @extends) $+$
+                           vcat @body.pp $+$
+                           text "@end"
+  | SEImport lhs.pp = text "@import" <+> text @path
+
+SEM Expression
+  | EJCall    lhs.pp = brackets (@target.pp <+> hsep @args.pp)
+  | EJString  lhs.pp = text "@" <> text @value
+
+SEM JImplementationElement [ | | pp : {Doc} ]
+  | JClassMethod    lhs.pp = text "-" <+> parens (@returnTy.pp) <>
+                              hsep @params.pp $+$ blockBraces (vcat @body.pp)
+  | JInstanceMethod lhs.pp = text "+" <+> parens (@returnTy.pp) <>
+                              hsep @params.pp $+$ blockBraces (vcat @body.pp)
+
+SEM JMethodParam [ | | pp : {Doc} ]
+  | JMethodParam lhs.pp = text @name <>
+                            (if isEmpty @param.pp then empty else colon <> @param.pp)
+
+SEM JArg [ | | pp : {Doc} ]
+  | JArg lhs.pp = maybeText @name <>
+                    (if isEmpty @value.pp then empty else colon <> @value.pp)
+
+SEM JMember [ | | pp : {Doc} ]
+  | JMember lhs.pp = @ty.pp <+> text @ident <+> @accessors.pp <> semi
+
+SEM JTy [ | | pp : {Doc} ]
+  | JTy    lhs.pp = text @ident
+  | JId    lhs.pp = text "id"
+  | JVoid  lhs.pp = text "void"
+
+SEM JParam [ | | pp : {Doc} ]
+  | Tuple lhs.pp = parens @x1.pp <> text @x2
+
+SEM MbJParam [ | | pp : {Doc} ]
+  | Just lhs.pp = @just.pp
+  | Nothing lhs.pp = empty
+
+SEM MbJAccessors [ | | pp : {Doc} ]
+  | Just lhs.pp = @just.pp
+  | Nothing lhs.pp = empty
+
+SEM JAccessors [ | | pp : {Doc} ]
+  | JAccessors lhs.pp = text "@accessors" <> maybeParens (commaList
+                          [if isNothing @property then empty else text "property" <> text "=" <> maybeText @property,
+                           if isNothing @getter then empty else text "getter" <> text "=" <> maybeText @getter,
+                           if isNothing @setter then empty else text "setter" <> text "=" <> maybeText @setter] )
