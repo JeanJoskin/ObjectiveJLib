@@ -60,8 +60,8 @@ $hexDigit = [0-9a-fA-F]
     continue|for|switch|while|debugger|function|this|with|default|if|throw|
     delete|in|try
 
-@futureKeyword = class|enum|extends|super|const|export|import|implements|
-                 let|private|public|yield|interface|package|protected|static
+@objectiveJKeyword = "@implementation" | "@end" | "@import" | "@accessors" |
+                       "id" | "@"
 
 -- Punctuators
 @punctuator =
@@ -102,6 +102,9 @@ $regExpNT = .
 
 @regExpLiteral = \/ @regExpFirstChar @regExpChar* \/ @identifierPart*
 
+-- Import path
+@importPath =  \" [^\"]* \" | \< [^\>]* \>
+
 -------------------------------------------------------------------------------
 -- Token definitions
 -------------------------------------------------------------------------------
@@ -109,9 +112,10 @@ $regExpNT = .
 tokens :-
   <0,sdiv> \" @stringDoubleQ* \"             { ValToken TkString }
   <0,sdiv> \' @stringSingleQ* \'             { ValToken TkString }
-  <0,sdiv> @keyword | @futureKeyword         { Reserved }
+  <0,sdiv> @keyword | @objectiveJKeyword     { Reserved }
   <0,sdiv> @punctuator                       { Reserved }
-  <sdiv>   @divPunctuator                    { Reserved }  
+  <sdiv>   @divPunctuator                    { Reserved }
+  <simp>   @importPath                       { ValToken TkString }
   <0,sdiv> @comment                          ;
   <0,sdiv> true | false                      { Reserved }
   <0,sdiv> null                              { Reserved }
@@ -119,7 +123,7 @@ tokens :-
   <0,sdiv> @hexLiteral                       { ValToken TkNumeric }
   <0,sdiv> @identifier                       { ValToken TkIdent }
   <0>      @regExpLiteral                    { ValToken TkRegExp }
-  <0,sdiv> $white+                           ;
+  <0,sdiv,simp> $white+                      ;
 
 {
 type AlexInput = (SourcePos, String)
@@ -145,6 +149,7 @@ updateState (ValToken ty _ _) s = case ty of
                                     TkComment -> s
                                     _         -> sdiv
 updateState (Reserved r _) s | elem r sdivTriggers = sdiv
+                             | r == "@import"      = simp
                              | otherwise           = 0
 
 -- |Chops a String into Tokens ignoring whitespace

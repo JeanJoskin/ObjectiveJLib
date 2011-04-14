@@ -33,6 +33,8 @@ import Language.JsLib.Scanner.Tokens
 import Language.JsLib.AST
 import Control.Applicative
 import Language.JsLib.Parser.Prim
+import Data.Map (Map)
+import qualified Data.Map as Map
 
 pArguments :: JsParser [Expression]
 pArguments = pPack "(" (pCommaList pAssignmentExpression) ")"
@@ -56,7 +58,7 @@ pEString = EString <$> pValToken TkString
 -- PrimaryExpression (11.1) (+RegExp)
 pPrimaryExpression :: JsParser Expression
 pPrimaryExpression = pEThis <|> pEIdent <|> pLiteral <|> pERegExp <|>
-                       pEArray <|> pEObject <|> pEExpression
+                       pEArray <|> pEObject <|> pEExpression <|> pEJString
                        <?> "primary expression"
 
 pEThis = EThis <$ pReserved "this"
@@ -105,7 +107,8 @@ pEDot = flip EDot <$ pReserved "." <*> pIdent
 
 -- CallExpression (11.2) (modified)
 pCallExpression :: JsParser Expression
-pCallExpression = pCECallMemberExpr <??> pCallExpressionPost
+pCallExpression = pEJCall <|>
+                    pCECallMemberExpr <??> pCallExpressionPost
 
 pCallExpressionPost :: JsParser (Expression -> Expression)
 pCallExpressionPost = flip (.) <$> pCECall <*> option id pCallExpressionPost <|>
@@ -289,6 +292,87 @@ pDebugger :: JsParser Statement
 pDebugger = SDebugger <$ pReserved "debugger" <* pSemi
 
 -------------------------------------------------------------------------------
+-- Objective J
+-------------------------------------------------------------------------------
+
+pJTy :: JsParser JTy
+pJTy = (JTy <$> pIdent) <|> (JVoid <$ pReserved "void") <|> (JId <$ pReserved "id")
+
+-- Objective-J: CPString
+pEJString :: JsParser Expression
+pEJString = EJString <$ pReserved "@" <*> pValToken TkString
+
+-- Objective-J: call
+pEJCall :: JsParser Expression
+pEJCall = notFollowedBy pEArray *> pEJCall'
+
+pEJCall' :: JsParser Expression
+pEJCall' = EJCall <$ pReserved "[" <*> pAssignmentExpression <*>
+           ((:) <$> pJNamedArg1 <*> (pJPositionalArgs <|> pJNamedArgs)) <*
+           pReserved "]"
+
+pJNamedArgs = many pJNamedArg
+pJPositionalArgs = map (JArg Nothing . Just) <$ pComma <*> pCommaList pAssignmentExpression
+
+pJNamedArg1 = JArg <$> (Just <$> pIdent) <*> pMaybe (pReserved ":" *> pAssignmentExpression)
+pJNamedArg = JArg <$> (Just <$> pIdent) <* pReserved ":" <*> (Just <$> pAssignmentExpression)
+
+-- Objective-J: import
+pJImport :: JsParser SourceElement
+pJImport = SEImport <$ pReserved "@import" <*> pValToken TkString
+
+-- Objective-J: implementation
+pJImplementation :: JsParser SourceElement
+pJImplementation = SEImplementation <$
+                     pReserved "@implementation" <*> pIdent <*> pMaybe (pReserved ":" *> pIdent) <*>
+                     option [] (pPack "{" (many pJMember)  "}") <*>
+                     many pJImplementationElement <*
+                     pReserved "@end"
+
+-- Objective-J: category implementation
+pJCategory :: JsParser SourceElement
+pJCategory = SECategory <$
+               pReserved "@implementation" <*> pIdent <*> pPack "(" pIdent ")" <*>
+               many pJImplementationElement <*
+               pReserved "@end"
+
+-- Objective-J: Member declaration
+pJMember :: JsParser JMember
+pJMember = JMember <$> pJTy <*> pIdent <*> pMaybe pJAccessors <* pReserved ";"
+
+pJAccessors :: JsParser JAccessors
+pJAccessors = (\m -> JAccessors (Map.lookup "property" m) (Map.lookup "getter" m) (Map.lookup "setter" m))
+                <$ pReserved "@accessors" <*> option Map.empty (pPack "(" (pJAccessorArgs) ")")
+
+pJAccessorArgs :: JsParser (Map String Ident)
+pJAccessorArgs = Map.fromList <$> pCommaList pJAccessorArg
+
+pJAccessorArg = pJAccessorProp "property" <|> pJAccessorProp "getter" <|>
+                  pJAccessorProp "setter"
+
+pJAccessorProp n = (,) <$> pReservedVal TkIdent n <* pReserved "=" <*> pIdent
+
+-- Objective-J: Implementation element
+pJImplementationElement :: JsParser JImplementationElement
+pJImplementationElement = pJClassMethod <|> pJInstanceMethod
+
+-- Objective-J: Method declaration
+pJClassMethod :: JsParser JImplementationElement
+pJClassMethod = JClassMethod <$ pReserved "-" <*> pPack "(" pJTy ")" <*>
+                  ((:) <$> pJMethodParam1 <*> many pJMethodParam) <*>
+                  pPack "{" pFunctionBody "}"
+
+pJInstanceMethod :: JsParser JImplementationElement
+pJInstanceMethod = JInstanceMethod <$ pReserved "+" <*> pPack "(" pJTy ")" <*>
+                     ((:) <$> pJMethodParam1 <*> many pJMethodParam) <*>
+                     pPack "{" pFunctionBody "}"
+
+pJMethodParam = JMethodParam <$> pIdent <*> (Just <$> pJParam)
+pJMethodParam1 = JMethodParam <$> pIdent <*> pMaybe pJParam
+
+pJParam = (,) <$ pReserved ":" <*> pPack "(" pJTy ")" <*> pIdent
+
+-------------------------------------------------------------------------------
 -- Program parsing
 -------------------------------------------------------------------------------
 
@@ -304,7 +388,8 @@ pProgram = Program <$> many pSourceElement
 
 -- SourceElement (14)
 pSourceElement :: JsParser SourceElement
-pSourceElement = pSEStatement <|> pFunctionDeclaration
+pSourceElement = pSEStatement <|> pFunctionDeclaration <|>
+                   try pJCategory <|> pJImplementation <|> pJImport
 
 pSEStatement = SEStatement <$> pStatement
 

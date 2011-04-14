@@ -41,6 +41,14 @@ DATA Program
 DATA SourceElement
   | SEStatement stmt : Statement
   | SEFunctionDecl ident: Ident params : {[Ident]} body : FunctionBody
+  | SEImplementation ident : Ident
+                     extends : (Maybe Ident)
+                     members : JMembers
+                     body : JImplementationElements
+  | SECategory ident : Ident
+               extends : Ident
+               body : JImplementationElements
+  | SEImport path : String
 
 DATA PropertyAssignment
   | PAExpr name : PropertyName value : Expression
@@ -112,6 +120,9 @@ DATA Expression
   | ELogicOR left : Expression right : Expression
   | EConditional cond : Expression yes : Expression no : Expression
   | EAssign left : Expression op : AssignOp right : Expression
+  | EJCall target : Expression args : JArgs
+  | EJString value : String
+  
 
 DATA AssignOp
   | AEquals
@@ -173,7 +184,49 @@ DATA Statement
   | STry stmt : Statement catch : MbCatchClause finally : MbStatement
   | SDebugger
 
+-------------------------------------------------------------------------------
+-- Objective J extensions
+-------------------------------------------------------------------------------
+
+TYPE JArgs = [JArg]
+
+DATA JArg
+  | JArg name : (Maybe Ident) value : MbExpression
+
+TYPE JMembers = [JMember]
+
+DATA JMember
+  | JMember ty : JTy ident : Ident accessors : MbJAccessors
+
+TYPE JImplementationElements = [JImplementationElement]
+
+DATA JImplementationElement
+  | JClassMethod returnTy : JTy params : JMethodParams body : FunctionBody
+  | JInstanceMethod returnTy : JTy params : JMethodParams body : FunctionBody
+
+DATA JTy
+  | JTy ident : Ident
+  | JId
+  | JVoid
+
+TYPE JMethodParams = [JMethodParam]
+TYPE JParam = (JTy,Ident)
+TYPE MbJParam = MAYBE JParam
+
+DATA JMethodParam
+  | JMethodParam name : Ident param : MbJParam
+
+TYPE MbJAccessors = MAYBE JAccessors
+
+DATA JAccessors
+  | JAccessors property : (Maybe Ident) getter : (Maybe Ident) setter : (Maybe Ident)
+
+-------------------------------------------------------------------------------
+-- Other things
+-------------------------------------------------------------------------------
+
 SET AllNt = Program SourceElement PropertyAssignment PropertyName Expression
             Decl ForClause CaseClause CatchClause Statement AssignOp
+            JMember JImplementationElement JTy JMethodParam JArg JAccessors
 
 DERIVING AllNt : Show
