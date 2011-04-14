@@ -13,7 +13,7 @@ Cabal-Version:       >=1.2
 
 Library
      hs-source-dirs:    src
-     Build-Depends:     base >= 4.2 && <5, parsec >= 3, pretty, array
+     Build-Depends:     base >= 4.2 && <5, parsec >= 3, pretty, array, containers
      Build-tools:       alex
      Exposed-modules:   Language.JsLib
                         Language.JsLib.AST
