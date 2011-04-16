@@ -314,6 +314,8 @@ SEM Expression
                                   (if null @varArgs.pp then empty else comma <+> (commaList @varArgs.pp))
                                 )
   | EJString  lhs.pp = text "@" <> text @value
+  | EJNil     lhs.pp = text "nil"
+  | EJSuper   lhs.pp = text "super"
 
 SEM JImplementationElement [ | | pp : {Doc} ]
   | JClassMethod    lhs.pp = text "-" <+> parens (@returnTy.pp) <>

@@ -142,7 +142,8 @@ DATA Expression
   | EAssign left : Expression op : AssignOp right : Expression
   | EJCall target : Expression args : JArgs varArgs : Expressions
   | EJString value : String
-  
+  | EJNil
+  | EJSuper
 
 DATA AssignOp
   | AEquals
@@ -263,5 +264,7 @@ SET AllNt = Program SourceElement PropertyAssignment PropertyName Expression
             FunctionBody Expressions PropertyAssignments Arguments Statements
             Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
             JMember JImplementationElement JTy JMethodParam JArg JAccessors
+            JArgs JMembers JImplementationElements JMethodParams JParam MbJParam
+            MbJAccessors
 
 DERIVING AllNt : Show

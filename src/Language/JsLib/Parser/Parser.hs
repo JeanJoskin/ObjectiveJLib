@@ -58,7 +58,8 @@ pEString = EString <$> pValToken TkString
 -- PrimaryExpression (11.1) (+RegExp)
 pPrimaryExpression :: JsParser Expression
 pPrimaryExpression = pEThis <|> pEIdent <|> pLiteral <|> pERegExp <|>
-                       pEArray <|> pEObject <|> pEExpression <|> pEJString
+                       pEArray <|> pEObject <|> pEExpression <|> pEJString <|>
+                       pEJNil <|> pEJSuper
                        <?> "primary expression"
 
 pEThis = EThis <$ pReserved "this"
@@ -294,6 +295,12 @@ pDebugger = SDebugger <$ pReserved "debugger" <* pSemi
 -------------------------------------------------------------------------------
 -- Objective J
 -------------------------------------------------------------------------------
+
+pEJNil :: JsParser Expression
+pEJNil = EJNil <$ pReserved "nil"
+
+pEJSuper :: JsParser Expression
+pEJSuper = EJSuper <$ pReserved "super"
 
 pJTy :: JsParser JTy
 pJTy = (JTy <$> pIdent) <|> (JVoid <$ pReserved "void") <|> (JId <$ pReserved "id")

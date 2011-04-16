@@ -61,7 +61,7 @@ $hexDigit = [0-9a-fA-F]
     delete|in|try
 
 @objectiveJKeyword = "@implementation" | "@end" | "@import" | "@accessors" |
-                       "id" | "@"
+                       "id" | "@" | "nil" | "super"
 
 -- Punctuators
 @punctuator =
