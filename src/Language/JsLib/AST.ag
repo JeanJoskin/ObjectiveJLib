@@ -218,6 +218,7 @@ DATA CatchClause
 -- Other things
 -------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 -------------------------------------------------------------------------------
 -- Objective J extensions
 -------------------------------------------------------------------------------
@@ -259,12 +260,14 @@ DATA JAccessors
 -- Other things
 -------------------------------------------------------------------------------
 
-SET AllNt = Program SourceElement PropertyAssignment PropertyName Expression
-            Decl ForClause CaseClause CatchClause Statement AssignOp
-            FunctionBody Expressions PropertyAssignments Arguments Statements
-            Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
-            JMember JImplementationElement JTy JMethodParam JArg JAccessors
-            JArgs JMembers JImplementationElements JMethodParams JParam MbJParam
-            MbJAccessors
+SET NtTop = Program
+SET AllNtExTop = Program SourceElement PropertyAssignment PropertyName Expression
+                 Decl ForClause CaseClause CatchClause Statement AssignOp
+                 FunctionBody Expressions PropertyAssignments Arguments Statements
+                 Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
+                 JMember JImplementationElement JTy JMethodParam JArg JAccessors
+                 JArgs JMembers JImplementationElements JMethodParams JParam MbJParam
+                 MbJAccessors
+SET AllNt = NtTop AllNtExTop
 
 DERIVING AllNt : Show
