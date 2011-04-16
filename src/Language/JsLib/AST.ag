@@ -120,7 +120,7 @@ DATA Expression
   | ELogicOR left : Expression right : Expression
   | EConditional cond : Expression yes : Expression no : Expression
   | EAssign left : Expression op : AssignOp right : Expression
-  | EJCall target : Expression args : JArgs
+  | EJCall target : Expression args : JArgs varArgs : Expressions
   | EJString value : String
   
 
@@ -191,7 +191,7 @@ DATA Statement
 TYPE JArgs = [JArg]
 
 DATA JArg
-  | JArg name : (Maybe Ident) value : MbExpression
+  | JArg name : Ident value : MbExpression
 
 TYPE JMembers = [JMember]
 

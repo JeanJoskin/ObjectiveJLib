@@ -314,7 +314,9 @@ SEM SourceElement
   | SEImport lhs.pp = text "@import" <+> text @path
 
 SEM Expression
-  | EJCall    lhs.pp = brackets (@target.pp <+> hsep @args.pp)
+  | EJCall    lhs.pp = brackets (@target.pp <+> hsep @args.pp <> 
+                                  (if null @varArgs.pp then empty else comma <+> (commaList @varArgs.pp))
+                                )
   | EJString  lhs.pp = text "@" <> text @value
 
 SEM JImplementationElement [ | | pp : {Doc} ]
@@ -328,7 +330,7 @@ SEM JMethodParam [ | | pp : {Doc} ]
                             (if isEmpty @param.pp then empty else colon <> @param.pp)
 
 SEM JArg [ | | pp : {Doc} ]
-  | JArg lhs.pp = maybeText @name <>
+  | JArg lhs.pp = text @name <>
                     (if isEmpty @value.pp then empty else colon <> @value.pp)
 
 SEM JMember [ | | pp : {Doc} ]

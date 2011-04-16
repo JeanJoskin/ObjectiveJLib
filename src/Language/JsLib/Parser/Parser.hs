@@ -308,14 +308,12 @@ pEJCall = notFollowedBy pEArray *> pEJCall'
 
 pEJCall' :: JsParser Expression
 pEJCall' = EJCall <$ pReserved "[" <*> pAssignmentExpression <*>
-           ((:) <$> pJNamedArg1 <*> (pJPositionalArgs <|> pJNamedArgs)) <*
+           ((:) <$> pJArg1 <*> many pJArg) <*> option [] (pComma *> pCommaList pJVarArg) <*
            pReserved "]"
 
-pJNamedArgs = many pJNamedArg
-pJPositionalArgs = map (JArg Nothing . Just) <$ pComma <*> pCommaList pAssignmentExpression
-
-pJNamedArg1 = JArg <$> (Just <$> pIdent) <*> pMaybe (pReserved ":" *> pAssignmentExpression)
-pJNamedArg = JArg <$> (Just <$> pIdent) <* pReserved ":" <*> (Just <$> pAssignmentExpression)
+pJArg1 = JArg <$> pIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
+pJArg = JArg <$> pIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
+pJVarArg = pAssignmentExpression
 
 -- Objective-J: import
 pJImport :: JsParser SourceElement
