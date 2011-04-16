@@ -256,6 +256,10 @@ SEM MbDeclExpr [ | | pp : {Doc} ]
 
 ATTR Decls [ | | pp USE {:} {[]} : {[Doc]} ]
 
+SEM MbDecl [ | | pp : {Doc} ]
+  | Just lhs.pp    = @just.pp
+  | Nothing lhs.pp = empty
+
 SEM Decl [ | | pp : {Doc} ]
   | Decl lhs.pp = text @ident <+>
                     if isEmpty @expr.pp then empty else text "=" <+> @expr.pp
