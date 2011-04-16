@@ -256,7 +256,7 @@ DATA JAccessors
 -------------------------------------------------------------------------------
 
 SET NtTop = Program
-SET AllNtExTop = Program SourceElement PropertyAssignment PropertyName Expression
+SET AllNtExTop = SourceElement PropertyAssignment PropertyName Expression
                  Decl ForClause CaseClause CatchClause Statement AssignOp
                  FunctionBody Expressions PropertyAssignments Arguments Statements
                  Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
