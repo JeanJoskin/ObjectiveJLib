@@ -120,9 +120,9 @@ SEM Statement [ | | pp : {Doc} isBlock : {Bool} ]
                               if isEmpty @elseStmt.pp then empty
                                  else text "else" $+$ indentStmt @elseStmt.isBlock @elseStmt.pp
               lhs.isBlock = False
-  | SDoWhile  lhs.pp      = text "do" $$ @body.pp <+> text "while" <+> parens @cond.pp <> semi
+  | SDoWhile  lhs.pp      = text "do" $$ @body.pp $$ text "while" <+> parens @cond.pp <> semi
               lhs.isBlock = False
-  | SWhile    lhs.pp      = text "while" <+> parens @cond.pp <+> indentStmt @stmt.isBlock @stmt.pp
+  | SWhile    lhs.pp      = text "while" <+> parens @cond.pp $$ indentStmt @stmt.isBlock @stmt.pp
               lhs.isBlock = False
   | SFor      lhs.pp      = text "for" <+> parens @clause.pp $$ indentStmt @stmt.isBlock @stmt.pp
               lhs.isBlock = False
