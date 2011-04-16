@@ -32,11 +32,14 @@ type Ident = String
 type Number = Double
 
 }
-
-TYPE FunctionBody = [SourceElement]
+-------------------------------------------------------------------------------
+-- Program
+-------------------------------------------------------------------------------
 
 DATA Program
   | Program body : FunctionBody
+
+TYPE FunctionBody = [SourceElement]
 
 DATA SourceElement
   | SEStatement stmt : Statement
@@ -50,22 +53,39 @@ DATA SourceElement
                body : JImplementationElements
   | SEImport path : String
 
-DATA PropertyAssignment
-  | PAExpr name : PropertyName value : Expression
-  | PAGet name : PropertyName body : FunctionBody
-  | PASet name : PropertyName args : Ident body : FunctionBody
+-------------------------------------------------------------------------------
+-- Statements
+-------------------------------------------------------------------------------
 
-DATA PropertyName
-  | PNIdent name : Ident
-  | PNString str : String
-  | PNNumeric num : Number
-
-TYPE Expressions = [Expression]
-
-TYPE PropertyAssignments = [PropertyAssignment]
-
-TYPE Arguments = [Expression]
+TYPE MbStatement = MAYBE Statement
 TYPE Statements = [Statement]
+
+DATA Statement
+  | SEmpty
+  | SBlock body : Statements
+  | SVariable assigns : Decls
+  | SExpression expr : Expression
+  | SIf cond : Expression thenStmt : Statement elseStmt : MbStatement
+  | SDoWhile body : Statement cond : Expression
+  | SWhile cond : Expression stmt : Statement
+  | SFor clause : ForClause stmt : Statement
+  | SContinue ident : (Maybe Ident)
+  | SBreak ident : (Maybe Ident)
+  | SReturn value : MbExpression
+  | SWith expr : Expression stmt : Statement
+  | SSwitch cond : Expression cases : CaseClauses
+  | SLabel name : Ident stmt : Statement
+  | SThrow value : Expression
+  | STry stmt : Statement catch : MbCatchClause finally : MbStatement
+  | SDebugger
+
+-------------------------------------------------------------------------------
+-- Expressions
+-------------------------------------------------------------------------------
+
+TYPE MbExpression = MAYBE Expression
+TYPE Expressions = [Expression]
+TYPE Arguments = [Expression]
 
 DATA Expression
   | EExpression expr : Expression
@@ -138,15 +158,35 @@ DATA AssignOp
   | ABitXOR
   | ABitOR
 
+-------------------------------------------------------------------------------
+-- Objects
+-------------------------------------------------------------------------------
+
+TYPE PropertyAssignments = [PropertyAssignment]
+
+DATA PropertyAssignment
+  | PAExpr name : PropertyName value : Expression
+  | PAGet name : PropertyName body : FunctionBody
+  | PASet name : PropertyName args : Ident body : FunctionBody
+
+DATA PropertyName
+  | PNIdent name : Ident
+  | PNString str : String
+  | PNNumeric num : Number
+
+-------------------------------------------------------------------------------
+-- Variable declarations
+-------------------------------------------------------------------------------
+
+TYPE Decls = [Decl]
+TYPE MbDeclExpr = MAYBE Expression
+
 DATA Decl
   | Decl ident : Ident expr : MbDeclExpr
 
-TYPE Decls = [Decl]
-
-TYPE MbDeclExpr = MAYBE Expression
-TYPE MbExpression = MAYBE Expression
-TYPE MbDecl = MAYBE Decl
-TYPE MbStatement = MAYBE Statement
+-------------------------------------------------------------------------------
+-- For clause
+-------------------------------------------------------------------------------
 
 DATA ForClause
   | FCExprExprExpr init : MbDeclExpr cond : MbExpression next : MbExpression
@@ -154,35 +194,28 @@ DATA ForClause
   | FCLhsIn elem : Expression set : Expression
   | FCVarIn elem : Decl set : Expression
 
+-------------------------------------------------------------------------------
+-- Case clause
+-------------------------------------------------------------------------------
+
 DATA CaseClause
   | CCCase value : Expression body : Statements
   | CCDefault body : Statements
 
 TYPE CaseClauses = [CaseClause]
 
+-------------------------------------------------------------------------------
+-- Catch clause
+-------------------------------------------------------------------------------
+
 TYPE MbCatchClause = MAYBE CatchClause
 
 DATA CatchClause
   | CatchClause ident : Ident stmt : Statement
 
-DATA Statement
-  | SEmpty
-  | SBlock body : Statements
-  | SVariable assigns : Decls
-  | SExpression expr : Expression
-  | SIf cond : Expression thenStmt : Statement elseStmt : MbStatement
-  | SDoWhile body : Statement cond : Expression
-  | SWhile cond : Expression stmt : Statement
-  | SFor clause : ForClause stmt : Statement
-  | SContinue ident : (Maybe Ident)
-  | SBreak ident : (Maybe Ident)
-  | SReturn value : MbExpression
-  | SWith expr : Expression stmt : Statement
-  | SSwitch cond : Expression cases : CaseClauses
-  | SLabel name : Ident stmt : Statement
-  | SThrow value : Expression
-  | STry stmt : Statement catch : MbCatchClause finally : MbStatement
-  | SDebugger
+-------------------------------------------------------------------------------
+-- Other things
+-------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
 -- Objective J extensions
@@ -227,6 +260,8 @@ DATA JAccessors
 
 SET AllNt = Program SourceElement PropertyAssignment PropertyName Expression
             Decl ForClause CaseClause CatchClause Statement AssignOp
+            FunctionBody Expressions PropertyAssignments Arguments Statements
+            Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
             JMember JImplementationElement JTy JMethodParam JArg JAccessors
 
 DERIVING AllNt : Show
