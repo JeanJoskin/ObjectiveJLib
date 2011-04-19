@@ -60,8 +60,16 @@ $hexDigit = [0-9a-fA-F]
     continue|for|switch|while|debugger|function|this|with|default|if|throw|
     delete|in|try
 
-@objectiveJKeyword = "@implementation" | "@end" | "@import" | "@accessors" |
-                       "id" | "@" | "nil" | "super"
+@jKeyword = "@implementation" | "@import" | "@end" | "@"
+
+-- Objective J domain keywords
+--   These keywords apply between @implements and @end
+@jDomKeyword = break|do|instanceof|typeof|case|else|var|catch|finally|return|void|
+               continue|for|switch|while|debugger|function|self|with|default|if|throw|
+               delete|in|try|
+               "@accessors"|"@selector"|super
+
+@jType = id|char|int|float|double|long|short|signed|unsigned|void|"@action"|"$bool$"
 
 -- Punctuators
 @punctuator =
@@ -109,21 +117,31 @@ $regExpNT = .
 -- Token definitions
 -------------------------------------------------------------------------------
 
+-- States:
+--   0: base state
+--   sj: J-mode
+--   sd: / is a division, not a regExp
+--   sdj: / is a division, not a regExp in J-mode
+--   sim: an import path follows
+
 tokens :-
-  <0,sdiv> \" @stringDoubleQ* \"             { ValToken TkString }
-  <0,sdiv> \' @stringSingleQ* \'             { ValToken TkString }
-  <0,sdiv> @keyword | @objectiveJKeyword     { Reserved }
-  <0,sdiv> @punctuator                       { Reserved }
-  <sdiv>   @divPunctuator                    { Reserved }
-  <simp>   @importPath                       { ValToken TkString }
-  <0,sdiv> @comment                          ;
-  <0,sdiv> true | false                      { Reserved }
-  <0,sdiv> null                              { Reserved }
-  <0,sdiv> @decimalLiteral                   { ValToken TkNumeric }
-  <0,sdiv> @hexLiteral                       { ValToken TkNumeric }
-  <0,sdiv> @identifier                       { ValToken TkIdent }
-  <0>      @regExpLiteral                    { ValToken TkRegExp }
-  <0,sdiv,simp> $white+                      ;
+  <0,sd,sdj,sj>     \" @stringDoubleQ* \"             { ValToken TkString }
+  <0,sd,sdj,sj>     \' @stringSingleQ* \'             { ValToken TkString }
+  <0,sd>            @keyword | @jKeyword              { Reserved }
+  <sdj,sj>          @jKeyword | @jDomKeyword          { Reserved }
+  <sdj,sj>          @jType                            { Reserved }
+  <0,sd,sdj,sj>     @punctuator                       { Reserved }
+  <sd,sdj>          @divPunctuator                    { Reserved }
+  <sim>             @importPath                       { ValToken TkString }
+  <0,sd,sdj,sj>     @comment                          ;
+  <0,sd,sdj,sj>     true | false                      { Reserved }
+  <0,sd>            null                              { Reserved }
+  <sj,sdj>          nil                               { Reserved }
+  <0,sd,sdj,sj>     @decimalLiteral                   { ValToken TkNumeric }
+  <0,sd,sdj,sj>     @hexLiteral                       { ValToken TkNumeric }
+  <0,sd,sdj,sj>     @identifier                       { ValToken TkIdent }
+  <0,sj>            @regExpLiteral                    { ValToken TkRegExp }
+  <0,sd,sdj,sim,sj> $white+                      ;
 
 {
 type AlexInput = (SourcePos, String)
@@ -136,6 +154,9 @@ alexGetChar (p, c:cs) = Just (c, (updatePosChar p c, cs))
 alexInputPrevChar :: AlexInput -> Char
 alexInputPrevChar = error "alexInputPrevChar: should not be used."
 
+inJMode :: Int -> Bool
+inJMode = flip elem [sj,sdj]
+
 sdivTriggers = [ "]", ")", "++", "--" ]
 
 -- |Updates the scanner state. The state is changed to 0 when we can expect
@@ -147,10 +168,12 @@ updateState :: Token  -- ^ The current token
             -> Int    -- ^ The new state
 updateState (ValToken ty _ _) s = case ty of
                                     TkComment -> s
-                                    _         -> sdiv
-updateState (Reserved r _) s | elem r sdivTriggers = sdiv
-                             | r == "@import"      = simp
-                             | otherwise           = 0
+                                    _         -> if inJMode s then sdj else sd
+updateState (Reserved r _) s | elem r sdivTriggers = if inJMode s then sdj else sd
+                             | r == "@import"      = sim
+                             | r == "@implementation" = sj
+                             | r == "@end"         = 0
+                             | otherwise           = if inJMode s then sj else 0
 
 -- |Chops a String into Tokens ignoring whitespace
 scan :: FilePath   -- ^ The filename the string originates from. It is solely

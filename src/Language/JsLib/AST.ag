@@ -141,9 +141,11 @@ DATA Expression
   | EConditional cond : Expression yes : Expression no : Expression
   | EAssign left : Expression op : AssignOp right : Expression
   | EJCall target : Expression args : JArgs varArgs : Expressions
+  | EJSelector fields : {[String]}
   | EJString value : String
   | EJNil
   | EJSuper
+  | EJSelf
 
 DATA AssignOp
   | AEquals
@@ -235,9 +237,20 @@ DATA JImplementationElement
   | JInstanceMethod returnTy : JTy params : JMethodParams body : FunctionBody
 
 DATA JTy
-  | JTy ident : Ident
-  | JId
-  | JVoid
+  | JTyObject ident : Ident
+  | JTyId
+  | JTyVoid
+  | JTyChar
+  | JTyFloat
+  | JTyInt signed : Bool
+  | JTyShort signed : Bool
+  | JTyLong signed : Bool
+  | JTyDouble
+  | JTyBool
+  | JTyAction
+  | JTyArray ty : JTy
+  | JTyPointer ty : JTy
+  | JTyProtocol ty : JTy ident : Ident
 
 TYPE JMethodParams = [JMethodParam]
 TYPE JParam = (JTy,Ident)
@@ -249,7 +262,11 @@ DATA JMethodParam
 TYPE MbJAccessors = MAYBE JAccessors
 
 DATA JAccessors
-  | JAccessors property : (Maybe Ident) getter : (Maybe Ident) setter : (Maybe Ident)
+  | JAccessors property : (Maybe Ident)
+               getter : (Maybe Ident)
+               setter : (Maybe Ident)
+               read : Bool
+               write : Bool
 
 -------------------------------------------------------------------------------
 -- Other things

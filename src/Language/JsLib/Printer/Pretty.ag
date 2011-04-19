@@ -313,9 +313,11 @@ SEM Expression
   | EJCall    lhs.pp = brackets (@target.pp <+> hsep @args.pp <> 
                                   (if null @varArgs.pp then empty else comma <+> (commaList @varArgs.pp))
                                 )
+  | EJSelector lhs.pp = text "@selector" <> parens (hcat $ map (\f -> text f <> colon) @fields)
   | EJString  lhs.pp = text "@" <> text @value
   | EJNil     lhs.pp = text "nil"
   | EJSuper   lhs.pp = text "super"
+  | EJSelf    lhs.pp = text "self"
 
 SEM JImplementationElement [ | | pp : {Doc} ]
   | JClassMethod    lhs.pp = text "-" <+> parens (@returnTy.pp) <>
@@ -335,9 +337,19 @@ SEM JMember [ | | pp : {Doc} ]
   | JMember lhs.pp = @ty.pp <+> text @ident <+> @accessors.pp <> semi
 
 SEM JTy [ | | pp : {Doc} ]
-  | JTy    lhs.pp = text @ident
-  | JId    lhs.pp = text "id"
-  | JVoid  lhs.pp = text "void"
+  | JTyObject   lhs.pp = text @ident
+  | JTyId       lhs.pp = text "id"
+  | JTyVoid     lhs.pp = text "void"
+  | JTyBool     lhs.pp = text "$bool$"
+  | JTyChar     lhs.pp = text "char"
+  | JTyFloat    lhs.pp = text "float"
+  | JTyInt      lhs.pp = (if @signed then empty else text "unsigned") <+> text "int"
+  | JTyShort    lhs.pp = (if @signed then empty else text "unsigned") <+> text "short"
+  | JTyLong     lhs.pp = (if @signed then empty else text "unsigned") <+> text "long"
+  | JTyDouble   lhs.pp = text "double"
+  | JTyAction   lhs.pp = text "@action"
+  | JTyArray    lhs.pp = @ty.pp <> text "[]"
+  | JTyPointer  lhs.pp = @ty.pp <> text "*"
 
 SEM JParam [ | | pp : {Doc} ]
   | Tuple lhs.pp = parens @x1.pp <> text @x2
@@ -354,4 +366,6 @@ SEM JAccessors [ | | pp : {Doc} ]
   | JAccessors lhs.pp = text "@accessors" <> maybeParens (commaList
                           [if isNothing @property then empty else text "property" <> text "=" <> maybeText @property,
                            if isNothing @getter then empty else text "getter" <> text "=" <> maybeText @getter,
-                           if isNothing @setter then empty else text "setter" <> text "=" <> maybeText @setter] )
+                           if isNothing @setter then empty else text "setter" <> text "=" <> maybeText @setter,
+                           if not @read && @write then empty else text "readonly",
+                           if not @write && @read then empty else text "writeonly" ] )

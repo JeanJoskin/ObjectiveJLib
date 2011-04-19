@@ -34,6 +34,7 @@ import Language.JsLib.AST
 import Control.Applicative
 import Language.JsLib.Parser.Prim
 import Data.Map (Map)
+import Data.List (intersperse)
 import qualified Data.Map as Map
 
 pArguments :: JsParser [Expression]
@@ -59,7 +60,7 @@ pEString = EString <$> pValToken TkString
 pPrimaryExpression :: JsParser Expression
 pPrimaryExpression = pEThis <|> pEIdent <|> pLiteral <|> pERegExp <|>
                        pEArray <|> pEObject <|> pEExpression <|> pEJString <|>
-                       pEJNil <|> pEJSuper
+                       pEJNil <|> pEJSuper <|> pEJSelf <|> pEJSelector
                        <?> "primary expression"
 
 pEThis = EThis <$ pReserved "this"
@@ -108,7 +109,7 @@ pEDot = flip EDot <$ pReserved "." <*> pIdent
 
 -- CallExpression (11.2) (modified)
 pCallExpression :: JsParser Expression
-pCallExpression = pEJCall <|>
+pCallExpression = pEJCall <??> pCallExpressionPost <|>
                     pCECallMemberExpr <??> pCallExpressionPost
 
 pCallExpressionPost :: JsParser (Expression -> Expression)
@@ -296,6 +297,9 @@ pDebugger = SDebugger <$ pReserved "debugger" <* pSemi
 -- Objective J
 -------------------------------------------------------------------------------
 
+pEJSelf :: JsParser Expression
+pEJSelf = EJSelf <$ pReserved "self"
+
 pEJNil :: JsParser Expression
 pEJNil = EJNil <$ pReserved "nil"
 
@@ -303,7 +307,35 @@ pEJSuper :: JsParser Expression
 pEJSuper = EJSuper <$ pReserved "super"
 
 pJTy :: JsParser JTy
-pJTy = (JTy <$> pIdent) <|> (JVoid <$ pReserved "void") <|> (JId <$ pReserved "id")
+pJTy = pJPrimTy <??> pJTySuffix <|> pJExtTy
+ 
+pJPrimTy = pJTyId <|> pJTyVoid <|> pJTyBool <|> pJTyInt <|> pJTyShort <|> pJTyChar <|>
+             pJTyFloat <|> pJTyDouble <|> pJTyLong <|> pJTyObject
+
+pJExtTy = pJTyAction
+
+pJTyId = (JTyId <$ pReserved "id") <??> pJTyProtocol
+pJTyVoid = JTyVoid <$ pReserved "void"
+pJTyBool = JTyBool <$ pReserved "$bool$"
+pJTyInt = pTySignedUnsigned JTyInt "int"
+pJTyShort = pTySignedUnsigned JTyShort "short"
+pJTyChar = JTyChar <$ pReserved "char"
+pJTyFloat = JTyFloat <$ pReserved "float"
+pJTyDouble = JTyDouble <$ pReserved "double"
+pJTyLong = pTySignedUnsigned JTyShort "long"
+pJTyObject = JTyObject <$> pIdent
+pJTyAction = JTyAction <$ pReserved "@action"
+
+pTySignedUnsigned c r = try (c <$> (pJTySigned <|> pJTyUnsigned) <* pMaybe (pReserved r) <|>
+                               c True <$ pReserved r)
+pJTySigned = True <$ pReserved "signed"
+pJTyUnsigned = False <$ pReserved "unsigned"
+pJTyProtocol = flip JTyProtocol <$ pReserved "<" <*> pIdent <* pReserved ">"
+
+pJTySuffix = pJTyPointer <|> pJTyArray
+
+pJTyPointer = JTyPointer <$ pReserved "*"
+pJTyArray = JTyArray <$ pReserved "[" <* pReserved "]"
 
 -- Objective-J: CPString
 pEJString :: JsParser Expression
@@ -318,8 +350,8 @@ pEJCall' = EJCall <$ pReserved "[" <*> pAssignmentExpression <*>
            ((:) <$> pJArg1 <*> many pJArg) <*> option [] (pComma *> pCommaList pJVarArg) <*
            pReserved "]"
 
-pJArg1 = JArg <$> pIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
-pJArg = JArg <$> pIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
+pJArg1 = JArg <$> pStupidIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
+pJArg = JArg <$> option "" pStupidIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
 pJVarArg = pAssignmentExpression
 
 -- Objective-J: import
@@ -328,7 +360,10 @@ pJImport = SEImport <$ pReserved "@import" <*> pValToken TkString
 
 -- Objective-J: implementation
 pJImplementation :: JsParser SourceElement
-pJImplementation = SEImplementation <$
+pJImplementation = notFollowedBy (pReserved "@implementation" <* pIdent <* pPack "(" pIdent ")") *>
+                     pJImplementation'
+
+pJImplementation' = SEImplementation <$
                      pReserved "@implementation" <*> pIdent <*> pMaybe (pReserved ":" *> pIdent) <*>
                      option [] (pPack "{" (many pJMember)  "}") <*>
                      many pJImplementationElement <*
@@ -346,16 +381,25 @@ pJMember :: JsParser JMember
 pJMember = JMember <$> pJTy <*> pIdent <*> pMaybe pJAccessors <* pReserved ";"
 
 pJAccessors :: JsParser JAccessors
-pJAccessors = (\m -> JAccessors (Map.lookup "property" m) (Map.lookup "getter" m) (Map.lookup "setter" m))
+pJAccessors = (\m -> JAccessors (Map.lookup "property" m)
+                                (Map.lookup "getter" m)
+                                (Map.lookup "setter" m)
+                                (not $ Map.member "readonly" m)
+                                (not $ Map.member "writeonly" m)
+              )
                 <$ pReserved "@accessors" <*> option Map.empty (pPack "(" (pJAccessorArgs) ")")
 
 pJAccessorArgs :: JsParser (Map String Ident)
 pJAccessorArgs = Map.fromList <$> pCommaList pJAccessorArg
 
-pJAccessorArg = pJAccessorProp "property" <|> pJAccessorProp "getter" <|>
-                  pJAccessorProp "setter"
+pJAccessorArg = pJAccessorProp "property" pIdent <|> pJAccessorProp "getter" pSelectorStr <|>
+                  pJAccessorProp "setter" pSelectorStr <|> pJAccessorProp' "readonly" <|>
+                  pJAccessorProp' "writeonly" <|> pJAccessorProp' "readwrite"
 
-pJAccessorProp n = (,) <$> pReservedVal TkIdent n <* pReserved "=" <*> pIdent
+
+pJAccessorProp n p = (,) <$> pReservedVal TkIdent n <*> option "" (pReserved "=" *> p)
+pJAccessorProp' n = flip (,) "" <$> pReservedVal TkIdent n
+
 
 -- Objective-J: Implementation element
 pJImplementationElement :: JsParser JImplementationElement
@@ -372,10 +416,26 @@ pJInstanceMethod = JInstanceMethod <$ pReserved "+" <*> pPack "(" pJTy ")" <*>
                      ((:) <$> pJMethodParam1 <*> many pJMethodParam) <*>
                      pPack "{" pFunctionBody "}"
 
-pJMethodParam = JMethodParam <$> pIdent <*> (Just <$> pJParam)
-pJMethodParam1 = JMethodParam <$> pIdent <*> pMaybe pJParam
+pJMethodParam = JMethodParam <$> option "" pStupidIdent <*> (Just <$> pJParam)
+pJMethodParam1 = JMethodParam <$> pStupidIdent <*> pMaybe pJParam
 
-pJParam = (,) <$ pReserved ":" <*> pPack "(" pJTy ")" <*> pIdent
+pJParam = (,) <$ pReserved ":" <*> option (JTyId) (pPack "(" pJTy ")") <*> pIdent
+
+pStupidIdent = pIdent <|> pReserved "self" <|> pReserved "with"
+
+-- Objective-J: selector
+pEJSelector :: JsParser Expression
+pEJSelector = EJSelector <$ pReserved "@selector" <*>
+                pPack "(" pSelector ")"
+
+pSelector :: JsParser [Ident]
+pSelector = (:) <$> pIdent <*> pSelectorPart
+
+pSelectorPart = try ((:) <$ pReserved ":" <*> pIdent <*> pSelectorPart) <|>
+                ([] <$ pMaybe (pReserved ":"))
+
+pSelectorStr :: JsParser String
+pSelectorStr = concat . intersperse ":" <$> pSelector
 
 -------------------------------------------------------------------------------
 -- Program parsing
@@ -394,7 +454,7 @@ pProgram = Program <$> many pSourceElement
 -- SourceElement (14)
 pSourceElement :: JsParser SourceElement
 pSourceElement = pSEStatement <|> pFunctionDeclaration <|>
-                   try pJCategory <|> pJImplementation <|> pJImport
+                   pJImplementation <|> pJCategory <|> pJImport
 
 pSEStatement = SEStatement <$> pStatement
 
