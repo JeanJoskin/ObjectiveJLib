@@ -23,5 +23,7 @@ Library
                         Language.JsLib.Scanner.Tokens
                         Language.JsLib.Scanner.Scanner
                         Language.JsLib.Parser.Parser
+                        Language.JsLib.Parser.Prim
                         Language.JsLib.Printer.Pretty
-     Other-modules:     Language.JsLib.Parser.Prim
+                        Language.JsLib.Printer.Util
+

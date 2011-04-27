@@ -13,9 +13,6 @@ data UserState = UserState {  permissiveSemicolon :: Bool }
 defaultState :: UserState
 defaultState = UserState { permissiveSemicolon = True }
 
-undef :: Expression
-undef = EIdent "undefined"
-
 -------------------------------------------------------------------------------
 -- Primary parsers
 -------------------------------------------------------------------------------

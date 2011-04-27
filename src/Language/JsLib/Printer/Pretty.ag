@@ -27,7 +27,7 @@
 --
 }
 
-MODULE {Language.JsLib.Printer.Pretty} {printPretty} {}
+MODULE {Language.JsLib.Printer.Pretty} {printPretty,printPretty'} {}
 
 PRAGMA genlinepragmas
 
@@ -37,52 +37,19 @@ imports
 {
 import Text.PrettyPrint.HughesPJ
 import Language.JsLib.AST hiding (Ident,Number)
-import Data.List
+import Language.JsLib.Printer.Util
 import Data.Maybe (isNothing)
 }
 
 {
 -- |Pretty prints an AST given its root node
 printPretty :: Program -> String
-printPretty p = let inh = Inh_Program
-                    syn = wrap_Program (sem_Program p) inh
-                in  render (pp_Syn_Program syn)
+printPretty = render . printPretty'
 
-sepList :: Doc -> [Doc] -> Doc
-sepList sep xs = foldr (<>) empty (intersperse sep xs) 
-
-commaList = sepList (text ", ")
-
-vSepList :: Doc -> [Doc] -> Doc
-vSepList sep [] = empty
-vSepList sep xs = foldr1 (\x r -> x <> sep $$ r) xs
-
-maybeText :: Maybe String -> Doc
-maybeText (Just s) = text s
-maybeText Nothing  = empty
-
-blockBraces :: Doc -> Doc
-blockBraces d | isEmpty d = lbrace <+> rbrace
-              | otherwise = lbrace $+$ (nest 4 d) $+$ rbrace
-
-objectBraces :: Doc -> Doc
-objectBraces d | isEmpty d = lbrace <+> rbrace
-               | otherwise = lbrace $+$ (nest 2 d) $+$ rbrace
-
-indentStmt :: Bool -> Doc -> Doc
-indentStmt isBlock d | isBlock = d
-                     | otherwise = nest 4 d
-
-maybeParens :: Doc -> Doc
-maybeParens d | isEmpty d = empty
-              | otherwise = parens d
-
--- | Pretty print a number
-prettyNum :: Number -> Doc
-prettyNum n | n - (fromIntegral flr) == 0 = text (show flr)
-            | otherwise = text (show n)
-  where
-    flr = (floor n) :: Int
+printPretty' :: Program -> Doc
+printPretty' p = let inh = Inh_Program
+                     syn = wrap_Program (sem_Program p) inh
+                 in  pp_Syn_Program syn
 }
 
 ATTR FunctionBody [ | | pp USE {:} {[]} : {[Doc]} ]
