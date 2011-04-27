@@ -109,7 +109,7 @@ pEDot = flip EDot <$ pReserved "." <*> pIdent
 
 -- CallExpression (11.2) (modified)
 pCallExpression :: JsParser Expression
-pCallExpression = pEJCall <??> pCallExpressionPost <|>
+pCallExpression = pEJMessage <??> pCallExpressionPost <|>
                     pCECallMemberExpr <??> pCallExpressionPost
 
 pCallExpressionPost :: JsParser (Expression -> Expression)
@@ -316,7 +316,7 @@ pJExtTy = pJTyAction
 
 pJTyId = (JTyId <$ pReserved "id") <??> pJTyProtocol
 pJTyVoid = JTyVoid <$ pReserved "void"
-pJTyBool = JTyBool <$ pReserved "$bool$"
+pJTyBool = JTyBool <$ pReserved "bool"
 pJTyInt = pTySignedUnsigned JTyInt "int"
 pJTyShort = pTySignedUnsigned JTyShort "short"
 pJTyChar = JTyChar <$ pReserved "char"
@@ -326,8 +326,8 @@ pJTyLong = pTySignedUnsigned JTyShort "long"
 pJTyObject = JTyObject <$> pIdent
 pJTyAction = JTyAction <$ pReserved "@action"
 
-pTySignedUnsigned c r = try (c <$> (pJTySigned <|> pJTyUnsigned) <* pMaybe (pReserved r) <|>
-                               c True <$ pReserved r)
+pTySignedUnsigned c r = try (c <$> (pJTySigned <|> pJTyUnsigned) <* pMaybe (pReserved r)) <|>
+                               c True <$ pReserved r
 pJTySigned = True <$ pReserved "signed"
 pJTyUnsigned = False <$ pReserved "unsigned"
 pJTyProtocol = flip JTyProtocol <$ pReserved "<" <*> pIdent <* pReserved ">"
@@ -342,16 +342,16 @@ pEJString :: JsParser Expression
 pEJString = EJString <$ pReserved "@" <*> pValToken TkString
 
 -- Objective-J: call
-pEJCall :: JsParser Expression
-pEJCall = notFollowedBy pEArray *> pEJCall'
+pEJMessage :: JsParser Expression
+pEJMessage = notFollowedBy pEArray *> pEJMessage'
 
-pEJCall' :: JsParser Expression
-pEJCall' = EJCall <$ pReserved "[" <*> pAssignmentExpression <*>
-           ((:) <$> pJArg1 <*> many pJArg) <*> option [] (pComma *> pCommaList pJVarArg) <*
-           pReserved "]"
+pEJMessage' :: JsParser Expression
+pEJMessage' = EJMessage <$ pReserved "[" <*> pAssignmentExpression <*>
+                ((:) <$> pJArg1 <*> many pJArg) <*> option [] (pComma *> pCommaList pJVarArg) <*
+                pReserved "]"
 
-pJArg1 = JArg <$> pStupidIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
-pJArg = JArg <$> option "" pStupidIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
+pJArg1 = JArg <$> pIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
+pJArg = JArg <$> option "" pIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
 pJVarArg = pAssignmentExpression
 
 -- Objective-J: import
@@ -416,12 +416,10 @@ pJInstanceMethod = JInstanceMethod <$ pReserved "+" <*> pPack "(" pJTy ")" <*>
                      ((:) <$> pJMethodParam1 <*> many pJMethodParam) <*>
                      pPack "{" pFunctionBody "}"
 
-pJMethodParam = JMethodParam <$> option "" pStupidIdent <*> (Just <$> pJParam)
-pJMethodParam1 = JMethodParam <$> pStupidIdent <*> pMaybe pJParam
+pJMethodParam = JMethodParam <$> option "" pIdent <*> (Just <$> pJParam)
+pJMethodParam1 = JMethodParam <$> pIdent <*> pMaybe pJParam
 
 pJParam = (,) <$ pReserved ":" <*> option (JTyId) (pPack "(" pJTy ")") <*> pIdent
-
-pStupidIdent = pIdent <|> pReserved "self" <|> pReserved "with"
 
 -- Objective-J: selector
 pEJSelector :: JsParser Expression

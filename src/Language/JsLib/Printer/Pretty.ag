@@ -310,7 +310,7 @@ SEM SourceElement
   | SEImport lhs.pp = text "@import" <+> text @path
 
 SEM Expression
-  | EJCall    lhs.pp = brackets (@target.pp <+> hsep @args.pp <> 
+  | EJMessage lhs.pp = brackets (@target.pp <+> hsep @args.pp <> 
                                   (if null @varArgs.pp then empty else comma <+> (commaList @varArgs.pp))
                                 )
   | EJSelector lhs.pp = text "@selector" <> parens (hcat $ map (\f -> text f <> colon) @fields)

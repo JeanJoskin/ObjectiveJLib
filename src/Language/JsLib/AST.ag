@@ -140,7 +140,7 @@ DATA Expression
   | ELogicOR left : Expression right : Expression
   | EConditional cond : Expression yes : Expression no : Expression
   | EAssign left : Expression op : AssignOp right : Expression
-  | EJCall target : Expression args : JArgs varArgs : Expressions
+  | EJMessage target : Expression args : JArgs varArgs : Expressions
   | EJSelector fields : {[String]}
   | EJString value : String
   | EJNil
