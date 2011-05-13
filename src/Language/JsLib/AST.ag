@@ -176,6 +176,7 @@ DATA PropertyName
   | PNIdent name : Ident
   | PNString str : String
   | PNNumeric num : Number
+  | PNCPString str : String
 
 -------------------------------------------------------------------------------
 -- Variable declarations
@@ -233,14 +234,14 @@ DATA JMember
 TYPE JImplementationElements = [JImplementationElement]
 
 DATA JImplementationElement
-  | JClassMethod returnTy : JTy params : JMethodParams body : FunctionBody
-  | JInstanceMethod returnTy : JTy params : JMethodParams body : FunctionBody
+  | JClassMethod returnTy : JTy params : JMethodParams varArgs : Bool body : FunctionBody
+  | JInstanceMethod returnTy : JTy params : JMethodParams varArgs : Bool body : FunctionBody
 
 DATA JTy
   | JTyObject ident : Ident
   | JTyId
   | JTyVoid
-  | JTyChar
+  | JTyChar signed : Bool
   | JTyFloat
   | JTyInt signed : Bool
   | JTyShort signed : Bool

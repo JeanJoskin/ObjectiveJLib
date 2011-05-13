@@ -288,9 +288,11 @@ SEM Expression
 
 SEM JImplementationElement [ | | pp : {Doc} ]
   | JClassMethod    lhs.pp = text "-" <+> parens (@returnTy.pp) <>
-                              hsep @params.pp $+$ blockBraces (vcat @body.pp)
+                              hsep @params.pp <> if @varArgs then text ", ..." else empty $+$
+                              blockBraces (vcat @body.pp)
   | JInstanceMethod lhs.pp = text "+" <+> parens (@returnTy.pp) <>
-                              hsep @params.pp $+$ blockBraces (vcat @body.pp)
+                              hsep @params.pp <>  if @varArgs then text ", ..." else empty $+$
+                              blockBraces (vcat @body.pp)
 
 SEM JMethodParam [ | | pp : {Doc} ]
   | JMethodParam lhs.pp = text @name <>
@@ -308,7 +310,7 @@ SEM JTy [ | | pp : {Doc} ]
   | JTyId       lhs.pp = text "id"
   | JTyVoid     lhs.pp = text "void"
   | JTyBool     lhs.pp = text "$bool$"
-  | JTyChar     lhs.pp = text "char"
+  | JTyChar     lhs.pp = (if @signed then empty else text "unsigned") <+> text "char"
   | JTyFloat    lhs.pp = text "float"
   | JTyInt      lhs.pp = (if @signed then empty else text "unsigned") <+> text "int"
   | JTyShort    lhs.pp = (if @signed then empty else text "unsigned") <+> text "short"
@@ -336,3 +338,6 @@ SEM JAccessors [ | | pp : {Doc} ]
                            if isNothing @setter then empty else text "setter" <> text "=" <> maybeText @setter,
                            if not @read && @write then empty else text "readonly",
                            if not @write && @read then empty else text "writeonly" ] )
+
+SEM PropertyName
+  | PNCPString lhs.pp = text "@" <> text @str

@@ -11,7 +11,7 @@ type JsParser a = GenParser Token UserState a
 data UserState = UserState {  permissiveSemicolon :: Bool }
 
 defaultState :: UserState
-defaultState = UserState { permissiveSemicolon = True }
+defaultState = UserState { permissiveSemicolon = False }
 
 -------------------------------------------------------------------------------
 -- Primary parsers

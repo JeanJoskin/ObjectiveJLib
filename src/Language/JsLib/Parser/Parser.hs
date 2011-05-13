@@ -71,12 +71,15 @@ pEArray = EArray <$> pPack "[" (pCommaList pAssignmentExpression) "]"
 pEExpression = EExpression <$> pPack "(" pExpression ")"
 
 -- PropertyName (11.1.5)
+-- Warning: pEJString is only allowed for compatibility with existing
+--          code. It is invalid according to the ECMAScript spec.
 pPropertyName :: JsParser PropertyName
-pPropertyName = pPNIdent <|> pPNString <|> pPNNumeric <?> "property name"
+pPropertyName = pPNIdent <|> pPNString <|> pPNNumeric <|> pPNCPString <?> "property name"
 
 pPNIdent = PNIdent <$> pValToken TkIdent
 pPNString = PNString <$> pValToken TkString
 pPNNumeric = PNNumeric . read <$> pValToken TkNumeric
+pPNCPString = PNCPString <$ pReserved "@" <*> pValToken TkString
 
 -- PropertyAssignment (11.1.5)
 pPropertyAssignment :: JsParser PropertyAssignment
@@ -193,7 +196,7 @@ pStatement :: JsParser Statement
 pStatement = pBlock <|> pVariableStatement <|> pEmptyStatement <|>
                pIfStatement <|> pIterationStatement <|> pContinueStatement <|>
                pContinueStatement <|> pBreakStatement <|> pReturnStatement <|>
-               pWithStatement <|> pSwitchStatement <|> try pLabelledStatement <|>
+               pWithStatement <|> pSwitchStatement <|> pLabelledStatement <|>
                pThrow <|> pTry <|> pDebugger <|> pExpressionStatement
 
 -- Block (12.1)
@@ -276,7 +279,7 @@ pCCDefault = CCDefault <$ pReserved "default" <* pReserved ":" <*> many pStateme
 
 -- LabelledStatement (12.12)
 pLabelledStatement :: JsParser Statement
-pLabelledStatement = SLabel <$> pIdent <* pReserved ":" <*> pStatement
+pLabelledStatement = SLabel <$ notFollowedBy pExpression <*> pIdent <* pReserved ":" <*> pStatement
 
 -- ThrowStatement (12.13)
 pThrow :: JsParser Statement
@@ -309,27 +312,39 @@ pEJSuper = EJSuper <$ pReserved "super"
 pJTy :: JsParser JTy
 pJTy = pJPrimTy <??> pJTySuffix <|> pJExtTy
  
-pJPrimTy = pJTyId <|> pJTyVoid <|> pJTyBool <|> pJTyInt <|> pJTyShort <|> pJTyChar <|>
-             pJTyFloat <|> pJTyDouble <|> pJTyLong <|> pJTyObject
+pJPrimTy = pJTyId <|> pJTyVoid <|> pJTyBool <|> pTySimpleSigned <|> pTySimpleUnsigned <|>
+             pJTyChar <|> pJTyInt <|> pJTyShort <|> pJTyLong <|> pJTySignedUnsigned <|>
+             pJTyFloat <|> pJTyDouble <|> pJTyObject
 
 pJExtTy = pJTyAction
 
 pJTyId = (JTyId <$ pReserved "id") <??> pJTyProtocol
 pJTyVoid = JTyVoid <$ pReserved "void"
-pJTyBool = JTyBool <$ pReserved "bool"
-pJTyInt = pTySignedUnsigned JTyInt "int"
-pJTyShort = pTySignedUnsigned JTyShort "short"
-pJTyChar = JTyChar <$ pReserved "char"
+pJTyBool = JTyBool <$ pReserved "$bool$"
 pJTyFloat = JTyFloat <$ pReserved "float"
 pJTyDouble = JTyDouble <$ pReserved "double"
-pJTyLong = pTySignedUnsigned JTyShort "long"
-pJTyObject = JTyObject <$> pIdent
+pJTyObject = (JTyObject <$> pIdent) <??> pJTyProtocol
 pJTyAction = JTyAction <$ pReserved "@action"
 
-pTySignedUnsigned c r = try (c <$> (pJTySigned <|> pJTyUnsigned) <* pMaybe (pReserved r)) <|>
-                               c True <$ pReserved r
+pJTyChar' = JTyChar <$ pReserved "char"
+pJTyInt' = JTyInt <$ pReserved "int"
+pJTyShort' = JTyShort <$ pReserved "short"
+pJTyLong' = JTyLong <$ pReserved "long"
+pTySignUnsign' = pJTyChar' <|> pJTyInt' <|> pJTyShort' <|> pJTyLong'
+
+pJTyChar = flip ($) True <$> pJTyChar'
+pJTyInt = flip ($) True <$> pJTyInt'
+pJTyShort = flip ($) True <$> pJTyShort'
+pJTyLong = flip ($) True <$> pJTyLong'
+pTySignUnsign = pJTyChar <|> pJTyInt <|> pJTyShort <|> pJTyLong
+
+pTySimpleSigned = (notFollowedBy pJTySignedUnsigned) *> (JTyInt <$> pJTySigned)
+pTySimpleUnsigned = (notFollowedBy pJTySignedUnsigned) *> (JTyInt <$> pJTyUnsigned)
+
+pJTySignedUnsigned = (\s t -> t s) <$> (pJTySigned <|> pJTyUnsigned) <*> pTySignUnsign'
 pJTySigned = True <$ pReserved "signed"
 pJTyUnsigned = False <$ pReserved "unsigned"
+
 pJTyProtocol = flip JTyProtocol <$ pReserved "<" <*> pIdent <* pReserved ">"
 
 pJTySuffix = pJTyPointer <|> pJTyArray
@@ -341,7 +356,7 @@ pJTyArray = JTyArray <$ pReserved "[" <* pReserved "]"
 pEJString :: JsParser Expression
 pEJString = EJString <$ pReserved "@" <*> pValToken TkString
 
--- Objective-J: call
+-- Objective-J: message
 pEJMessage :: JsParser Expression
 pEJMessage = notFollowedBy pEArray *> pEJMessage'
 
@@ -350,9 +365,11 @@ pEJMessage' = EJMessage <$ pReserved "[" <*> pAssignmentExpression <*>
                 ((:) <$> pJArg1 <*> many pJArg) <*> option [] (pComma *> pCommaList pJVarArg) <*
                 pReserved "]"
 
-pJArg1 = JArg <$> pIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
-pJArg = JArg <$> option "" pIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
+pJArg1 = JArg <$> pStupidIdent <*> pMaybe (pReserved ":" *> pAssignmentExpression)
+pJArg = JArg <$> option "" pStupidIdent <* pReserved ":" <*> (Just <$> pAssignmentExpression)
 pJVarArg = pAssignmentExpression
+
+pStupidIdent = pIdent <|> pReserved "self" <|> pReserved "new" <|> pReserved "function"
 
 -- Objective-J: import
 pJImport :: JsParser SourceElement
@@ -408,16 +425,19 @@ pJImplementationElement = pJClassMethod <|> pJInstanceMethod
 -- Objective-J: Method declaration
 pJClassMethod :: JsParser JImplementationElement
 pJClassMethod = JClassMethod <$ pReserved "-" <*> pPack "(" pJTy ")" <*>
-                  ((:) <$> pJMethodParam1 <*> many pJMethodParam) <*>
+                  pJMethodParams <*> option False pJVarArgParam <*>
                   pPack "{" pFunctionBody "}"
 
 pJInstanceMethod :: JsParser JImplementationElement
 pJInstanceMethod = JInstanceMethod <$ pReserved "+" <*> pPack "(" pJTy ")" <*>
-                     ((:) <$> pJMethodParam1 <*> many pJMethodParam) <*>
+                     pJMethodParams <*> option False pJVarArgParam <*>
                      pPack "{" pFunctionBody "}"
 
-pJMethodParam = JMethodParam <$> option "" pIdent <*> (Just <$> pJParam)
-pJMethodParam1 = JMethodParam <$> pIdent <*> pMaybe pJParam
+pJMethodParams = (:) <$> pJMethodParam1 <*> many pJMethodParam
+pJMethodParam = JMethodParam <$> option "" pStupidIdent <*> (Just <$> pJParam)
+pJMethodParam1 = JMethodParam <$> pStupidIdent <*> pMaybe pJParam
+
+pJVarArgParam = True <$ pReserved "," <* pReserved "." <* pReserved "." <* pReserved "."
 
 pJParam = (,) <$ pReserved ":" <*> option (JTyId) (pPack "(" pJTy ")") <*> pIdent
 

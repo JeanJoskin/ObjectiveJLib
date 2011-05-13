@@ -60,16 +60,16 @@ $hexDigit = [0-9a-fA-F]
     continue|for|switch|while|debugger|function|this|with|default|if|throw|
     delete|in|try
 
-@jKeyword = "@implementation" | "@import" | "@end" | "@"
+@jKeyword = "@implementation" | "@import" | "@end" | "@" | "@selector"
 
 -- Objective J domain keywords
 --   These keywords apply between @implements and @end
-@jDomKeyword = break|do|instanceof|typeof|case|else|var|catch|finally|return|void|
+@jDomKeyword = break|do|instanceof|typeof|case|else|new|var|catch|finally|return|void|
                continue|for|switch|while|debugger|function|self|default|if|throw|
                delete|in|try|
-               "@accessors"|"@selector"|super
+               "@accessors"|super
 
-@jType = id|char|int|float|double|long|short|signed|unsigned|void|"@action"|bool
+@jType = id|char|int|float|double|long|short|signed|unsigned|void|"@action"|"$bool$"
 
 -- Punctuators
 @punctuator =
