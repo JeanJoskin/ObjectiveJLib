@@ -313,10 +313,10 @@ pJTy :: JsParser JTy
 pJTy = pJPrimTy <??> pJTySuffix <|> pJExtTy
  
 pJPrimTy = pJTyId <|> pJTyVoid <|> pJTyBool <|> pTySimpleSigned <|> pTySimpleUnsigned <|>
-             pJTyChar <|> pJTyInt <|> pJTyShort <|> pJTyLong <|> pJTySignedUnsigned <|>
+             pJTyChar <|> pJTyInt <|> pJTyShort <|> pJTyLong <|> pJTyLongLong <|> pJTySignedUnsigned <|>
              pJTyFloat <|> pJTyDouble <|> pJTyObject
 
-pJExtTy = pJTyAction
+pJExtTy = pJTyAction <|> pJTyBrace
 
 pJTyId = (JTyId <$ pReserved "id") <??> pJTyProtocol
 pJTyVoid = JTyVoid <$ pReserved "void"
@@ -325,18 +325,21 @@ pJTyFloat = JTyFloat <$ pReserved "float"
 pJTyDouble = JTyDouble <$ pReserved "double"
 pJTyObject = (JTyObject <$> pIdent) <??> pJTyProtocol
 pJTyAction = JTyAction <$ pReserved "@action"
+pJTyBrace = JTyBrace <$> pPack "{" pJTy "}"
 
 pJTyChar' = JTyChar <$ pReserved "char"
 pJTyInt' = JTyInt <$ pReserved "int"
 pJTyShort' = JTyShort <$ pReserved "short"
-pJTyLong' = JTyLong <$ pReserved "long"
-pTySignUnsign' = pJTyChar' <|> pJTyInt' <|> pJTyShort' <|> pJTyLong'
+pJTyLong' = JTyLong <$ notFollowedBy (pReserved "long" <* pReserved "long") <* pReserved "long"
+pJTyLongLong' = JTyLong <$ pReserved "long" <* pReserved "long"
+pTySignUnsign' = pJTyChar' <|> pJTyInt' <|> pJTyShort' <|> pJTyLong' <|> pJTyLongLong'
 
 pJTyChar = flip ($) True <$> pJTyChar'
 pJTyInt = flip ($) True <$> pJTyInt'
 pJTyShort = flip ($) True <$> pJTyShort'
 pJTyLong = flip ($) True <$> pJTyLong'
-pTySignUnsign = pJTyChar <|> pJTyInt <|> pJTyShort <|> pJTyLong
+pJTyLongLong = flip ($) True <$> pJTyLongLong'
+pTySignUnsign = pJTyChar <|> pJTyInt <|> pJTyShort <|> pJTyLong <|> pJTyLongLong
 
 pTySimpleSigned = (notFollowedBy pJTySignedUnsigned) *> (JTyInt <$> pJTySigned)
 pTySimpleUnsigned = (notFollowedBy pJTySignedUnsigned) *> (JTyInt <$> pJTyUnsigned)

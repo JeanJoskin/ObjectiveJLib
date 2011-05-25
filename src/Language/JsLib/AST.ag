@@ -246,12 +246,14 @@ DATA JTy
   | JTyInt signed : Bool
   | JTyShort signed : Bool
   | JTyLong signed : Bool
+  | JTyLongLong signed : Bool
   | JTyDouble
   | JTyBool
   | JTyAction
   | JTyArray ty : JTy
   | JTyPointer ty : JTy
   | JTyProtocol ty : JTy ident : Ident
+  | JTyBrace ty : JTy
 
 TYPE JMethodParams = [JMethodParam]
 TYPE JParam = (JTy,Ident)
