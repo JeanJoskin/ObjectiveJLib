@@ -288,11 +288,11 @@ SEM Expression
 
 SEM JImplementationElement [ | | pp : {Doc} ]
   | JClassMethod    lhs.pp = text "-" <+> parens (@returnTy.pp) <>
-                              hsep @params.pp <> if @varArgs then text ", ..." else empty $+$
-                              blockBraces (vcat @body.pp)
+                              hsep @params.pp <> (if @varArgs then text ", ..." else empty) $+$
+                              blockBraces (vcat @body.pp) $+$ empty
   | JInstanceMethod lhs.pp = text "+" <+> parens (@returnTy.pp) <>
-                              hsep @params.pp <>  if @varArgs then text ", ..." else empty $+$
-                              blockBraces (vcat @body.pp)
+                              hsep @params.pp <>  (if @varArgs then text ", ..." else empty) $+$
+                              blockBraces (vcat @body.pp) $+$ empty
 
 SEM JMethodParam [ | | pp : {Doc} ]
   | JMethodParam lhs.pp = text @name <>
@@ -315,10 +315,12 @@ SEM JTy [ | | pp : {Doc} ]
   | JTyInt      lhs.pp = (if @signed then empty else text "unsigned") <+> text "int"
   | JTyShort    lhs.pp = (if @signed then empty else text "unsigned") <+> text "short"
   | JTyLong     lhs.pp = (if @signed then empty else text "unsigned") <+> text "long"
+  | JTyLongLong lhs.pp = (if @signed then empty else text "unsigned") <+> text "long long"
   | JTyDouble   lhs.pp = text "double"
   | JTyAction   lhs.pp = text "@action"
   | JTyArray    lhs.pp = @ty.pp <> text "[]"
   | JTyPointer  lhs.pp = @ty.pp <> text "*"
+  | JTyBrace    lhs.pp = braces @ty.pp
 
 SEM JParam [ | | pp : {Doc} ]
   | Tuple lhs.pp = parens @x1.pp <> text @x2
