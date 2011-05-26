@@ -134,7 +134,7 @@ SEM Expression
   | ENumeric     lhs.pp = prettyNum @value
   | EString      lhs.pp = text @value
   | ERegExp      lhs.pp = text @regexp
-  | EArray       lhs.pp = lbrack <> vSepList comma @exprs.pp <> rbrack
+  | EArray       lhs.pp = lbrack <> commaList @exprs.pp <> rbrack
   | EObject      lhs.pp = objectBraces (vSepList comma @props.pp)
   | EFunction    lhs.pp = text "function" <+> maybeText @ident <>
                             parens (commaList (map text @params)) $$
