@@ -286,3 +286,4 @@ SET AllNtExTop = SourceElement PropertyAssignment PropertyName Expression
 SET AllNt = NtTop AllNtExTop
 
 DERIVING AllNt : Show
+DERIVING AllNt : Eq
