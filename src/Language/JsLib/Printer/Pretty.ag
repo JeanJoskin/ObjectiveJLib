@@ -270,8 +270,8 @@ SEM SourceElement
                                 blockBraces (vcat @members.pp) $+$
                                 vcat @body.pp $+$
                                 text "@end"
-  | SECategory lhs.pp = text "@implementation" <+> text @ident <+>
-                           parens (text @extends) $+$
+  | SECategory lhs.pp = text "@implementation" <+> text @extends <+>
+                           parens (text @ident) $+$
                            vcat @body.pp $+$
                            text "@end"
   | SEImport lhs.pp = text "@import" <+> text @path
