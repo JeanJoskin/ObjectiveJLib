@@ -48,8 +48,8 @@ DATA SourceElement
                      extends : (Maybe Ident)
                      members : JMembers
                      body : JImplementationElements
-  | SECategory ident : Ident
-               extends : Ident
+  | SECategory extends : Ident
+               ident : Ident
                body : JImplementationElements
   | SEImport path : String
 
