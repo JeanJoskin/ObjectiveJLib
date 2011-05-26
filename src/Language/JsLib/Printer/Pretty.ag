@@ -38,7 +38,7 @@ imports
 import Text.PrettyPrint.HughesPJ
 import Language.JsLib.AST hiding (Ident,Number)
 import Language.JsLib.Printer.Util
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing,catMaybes)
 }
 
 {
@@ -126,7 +126,7 @@ SEM MbExpression [ | | pp : {Doc} ]
   | Nothing lhs.pp = empty
 
 SEM Expression
-  | EExpression  lhs.pp = lparen <> @expr.pp <> rparen
+  | EExpression  lhs.pp = parens @expr.pp
   | EThis        lhs.pp = text "this" 
   | EIdent       lhs.pp = text @ident
   | ENull        lhs.pp = text "null"
@@ -334,12 +334,12 @@ SEM MbJAccessors [ | | pp : {Doc} ]
   | Nothing lhs.pp = empty
 
 SEM JAccessors [ | | pp : {Doc} ]
-  | JAccessors lhs.pp = text "@accessors" <> maybeParens (commaList
-                          [if isNothing @property then empty else text "property" <> text "=" <> maybeText @property,
-                           if isNothing @getter then empty else text "getter" <> text "=" <> maybeText @getter,
-                           if isNothing @setter then empty else text "setter" <> text "=" <> maybeText @setter,
-                           if not @read && @write then empty else text "readonly",
-                           if not @write && @read then empty else text "writeonly" ] )
+  | JAccessors lhs.pp = text "@accessors" <> maybeParens (commaList $ catMaybes
+                          [if isNothing @property then Nothing else Just (text "property" <> text "=" <> maybeText @property),
+                           if isNothing @getter then Nothing else Just (text "getter" <> text "=" <> maybeText @getter),
+                           if isNothing @setter then Nothing else Just (text "setter" <> text "=" <> maybeText @setter),
+                           if not @read && @write then Nothing else Just (text "readonly"),
+                           if not @write && @read then Nothing else Just (text "writeonly") ] )
 
 SEM PropertyName
   | PNCPString lhs.pp = text "@" <> text @str
