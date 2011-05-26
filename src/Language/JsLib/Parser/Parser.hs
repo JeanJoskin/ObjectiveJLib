@@ -427,12 +427,12 @@ pJImplementationElement = pJClassMethod <|> pJInstanceMethod
 
 -- Objective-J: Method declaration
 pJClassMethod :: JsParser JImplementationElement
-pJClassMethod = JClassMethod <$ pReserved "-" <*> pPack "(" pJTy ")" <*>
+pJClassMethod = JClassMethod <$ pReserved "+" <*> pPack "(" pJTy ")" <*>
                   pJMethodParams <*> option False pJVarArgParam <*>
                   pPack "{" pFunctionBody "}"
 
 pJInstanceMethod :: JsParser JImplementationElement
-pJInstanceMethod = JInstanceMethod <$ pReserved "+" <*> pPack "(" pJTy ")" <*>
+pJInstanceMethod = JInstanceMethod <$ pReserved "-" <*> pPack "(" pJTy ")" <*>
                      pJMethodParams <*> option False pJVarArgParam <*>
                      pPack "{" pFunctionBody "}"
 
