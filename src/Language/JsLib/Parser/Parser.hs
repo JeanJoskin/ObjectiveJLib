@@ -60,7 +60,7 @@ pEString = EString <$> pValToken TkString
 pPrimaryExpression :: JsParser Expression
 pPrimaryExpression = pEThis <|> pEIdent <|> pLiteral <|> pERegExp <|>
                        pEArray <|> pEObject <|> pEExpression <|> pEJString <|>
-                       pEJNil <|> pEJSuper <|> pEJSelf <|> pEJSelector
+                       pEJNil <|> pEJSelf <|> pEJSelector
                        <?> "primary expression"
 
 pEThis = EThis <$ pReserved "this"
@@ -364,7 +364,7 @@ pEJMessage :: JsParser Expression
 pEJMessage = notFollowedBy pEArray *> pEJMessage'
 
 pEJMessage' :: JsParser Expression
-pEJMessage' = EJMessage <$ pReserved "[" <*> pAssignmentExpression <*>
+pEJMessage' = EJMessage <$ pReserved "[" <*> (pAssignmentExpression <|> pEJSuper) <*>
                 ((:) <$> pJArg1 <*> many pJArg) <*> option [] (pComma *> pCommaList pJVarArg) <*
                 pReserved "]"
 
