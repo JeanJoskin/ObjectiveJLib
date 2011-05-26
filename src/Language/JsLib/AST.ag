@@ -141,7 +141,7 @@ DATA Expression
   | EConditional cond : Expression yes : Expression no : Expression
   | EAssign left : Expression op : AssignOp right : Expression
   | EJMessage target : Expression args : JArgs varArgs : Expressions
-  | EJSelector fields : {[String]}
+  | EJSelector fields : {[(Ident,Bool)]}
   | EJString value : String
   | EJNil
   | EJSuper
@@ -270,6 +270,7 @@ DATA JAccessors
                setter : (Maybe Ident)
                read : Bool
                write : Bool
+               copy : Bool
 
 -------------------------------------------------------------------------------
 -- Other things

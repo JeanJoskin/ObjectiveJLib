@@ -280,7 +280,7 @@ SEM Expression
   | EJMessage lhs.pp = brackets (@target.pp <+> hsep @args.pp <> 
                                   (if null @varArgs.pp then empty else comma <+> (commaList @varArgs.pp))
                                 )
-  | EJSelector lhs.pp = text "@selector" <> parens (hcat $ map (\f -> text f <> colon) @fields)
+  | EJSelector lhs.pp = text "@selector" <> parens (hcat $ map (\(f,c) -> text f <> if c then colon else empty) @fields)
   | EJString  lhs.pp = text "@" <> text @value
   | EJNil     lhs.pp = text "nil"
   | EJSuper   lhs.pp = text "super"
@@ -339,7 +339,8 @@ SEM JAccessors [ | | pp : {Doc} ]
                            if isNothing @getter then Nothing else Just (text "getter" <> text "=" <> maybeText @getter),
                            if isNothing @setter then Nothing else Just (text "setter" <> text "=" <> maybeText @setter),
                            if not @read && @write then Nothing else Just (text "readonly"),
-                           if not @write && @read then Nothing else Just (text "writeonly") ] )
+                           if not @write && @read then Nothing else Just (text "writeonly"),
+                           if @copy then Nothing else Just (text "copy") ] )
 
 SEM PropertyName
   | PNCPString lhs.pp = text "@" <> text @str

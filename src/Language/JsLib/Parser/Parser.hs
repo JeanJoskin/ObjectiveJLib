@@ -406,6 +406,7 @@ pJAccessors = (\m -> JAccessors (Map.lookup "property" m)
                                 (Map.lookup "setter" m)
                                 (not $ Map.member "readonly" m)
                                 (not $ Map.member "writeonly" m)
+                                (Map.member "copy" m)
               )
                 <$ pReserved "@accessors" <*> option Map.empty (pPack "(" (pJAccessorArgs) ")")
 
@@ -414,7 +415,8 @@ pJAccessorArgs = Map.fromList <$> pCommaList pJAccessorArg
 
 pJAccessorArg = pJAccessorProp "property" pIdent <|> pJAccessorProp "getter" pSelectorStr <|>
                   pJAccessorProp "setter" pSelectorStr <|> pJAccessorProp' "readonly" <|>
-                  pJAccessorProp' "writeonly" <|> pJAccessorProp' "readwrite"
+                  pJAccessorProp' "writeonly" <|> pJAccessorProp' "readwrite" <|>
+                  pJAccessorProp' "copy"
 
 
 pJAccessorProp n p = (,) <$> pReservedVal TkIdent n <*> option "" (pReserved "=" *> p)
@@ -449,14 +451,11 @@ pEJSelector :: JsParser Expression
 pEJSelector = EJSelector <$ pReserved "@selector" <*>
                 pPack "(" pSelector ")"
 
-pSelector :: JsParser [Ident]
-pSelector = (:) <$> pIdent <*> pSelectorPart
-
-pSelectorPart = try ((:) <$ pReserved ":" <*> pIdent <*> pSelectorPart) <|>
-                ([] <$ pMaybe (pReserved ":"))
+pSelector :: JsParser [(Ident,Bool)]
+pSelector = many1 ((,) <$> pIdent <*> option False (True <$ pReserved ":"))
 
 pSelectorStr :: JsParser String
-pSelectorStr = concat . intersperse ":" <$> pSelector
+pSelectorStr = concat . intersperse ":" . map fst <$> pSelector
 
 -------------------------------------------------------------------------------
 -- Program parsing
