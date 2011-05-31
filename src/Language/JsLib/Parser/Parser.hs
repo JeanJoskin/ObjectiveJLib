@@ -398,7 +398,7 @@ pJCategory = SECategory <$
 
 -- Objective-J: Member declaration
 pJMember :: JsParser JMember
-pJMember = JMember <$> pJTy <*> pIdent <*> pMaybe pJAccessors <* pReserved ";"
+pJMember = JMember <$> pJTy <*> pIdent <*> pMaybe pJAccessors <* pSemi
 
 pJAccessors :: JsParser JAccessors
 pJAccessors = (\m -> JAccessors (Map.lookup "property" m)
