@@ -27,7 +27,7 @@
 --
 }
 
-MODULE {Language.JsLib.Printer.Pretty} {printPretty,printPretty'} {}
+MODULE {Language.JsLib.Printer.Pretty} {printPrettyToString,printPretty} {}
 
 PRAGMA genlinepragmas
 
@@ -43,13 +43,13 @@ import Data.Maybe (isNothing,catMaybes)
 
 {
 -- |Pretty prints an AST given its root node
-printPretty :: Program -> String
-printPretty = render . printPretty'
+printPrettyToString :: Program -> String
+printPrettyToString = render . printPretty
 
-printPretty' :: Program -> Doc
-printPretty' p = let inh = Inh_Program
-                     syn = wrap_Program (sem_Program p) inh
-                 in  pp_Syn_Program syn
+printPretty :: Program -> Doc
+printPretty p = let inh = Inh_Program
+                    syn = wrap_Program (sem_Program p) inh
+                in  pp_Syn_Program syn
 }
 
 ATTR FunctionBody [ | | pp USE {:} {[]} : {[Doc]} ]
