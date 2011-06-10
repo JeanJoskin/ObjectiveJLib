@@ -96,7 +96,7 @@ $hexDigit = [0-9a-fA-F]
 @stringSingleQ  =  [^\'\\] | \\ @stringEscape
 
 -- Numbers
-@decimalLiteral = [0-9]+ (\.[0-9]+)? ([eE] [\+\-]? [0-9]+)? |
+@decimalLiteral = [0-9]+ (\. ([0-9]+)? )? ([eE] [\+\-]? [0-9]+)? |
                   \.[0-9]+ ([eE] [\+\-]? [0-9]+)?
 
 @hexLiteral = 0[xX] $hexDigit+
