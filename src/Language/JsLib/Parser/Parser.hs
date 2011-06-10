@@ -123,7 +123,7 @@ pCallExpressionPost = flip (.) <$> pCECall <*> option id pCallExpressionPost <|>
 pCECallMemberExpr = pMemberExpression <??> (flip ECall <$> pArguments)
 
 pCECall = flip ECall <$> pArguments
-pCEIndex = flip EIndex <$> pPack "[" pExpression "]"
+pCEIndex = flip EIndex <$ notFollowedBy pEJMessage <*> pPack "[" pExpression "]"
 pCEDot = flip EDot <$ pReserved "." <*> pIdent
 
 -- LeftHandSideExpression (11.2) (modified)
