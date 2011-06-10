@@ -113,6 +113,8 @@ SEM Statement [ | | pp : {Doc} isBlock : {Bool} ]
               lhs.isBlock = False
   | SDebugger lhs.pp      = text "debugger" <> semi
               lhs.isBlock = False
+  | SComment  lhs.pp      = (text "/*" <+> text @comment <+> text "*/") $+$ @stmt.pp
+              lhs.isBlock = False
 
 -------------------------------------------------------------------------------
 -- Expression

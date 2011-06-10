@@ -78,6 +78,7 @@ DATA Statement
   | SThrow value : Expression
   | STry stmt : Statement catch : MbCatchClause finally : MbStatement
   | SDebugger
+  | SComment comment : String stmt : Statement
 
 -------------------------------------------------------------------------------
 -- Expressions
