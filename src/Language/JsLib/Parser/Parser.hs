@@ -473,8 +473,9 @@ pProgram = Program <$> many pSourceElement
 
 -- SourceElement (14)
 pSourceElement :: JsParser SourceElement
-pSourceElement = pSEStatement <|> pFunctionDeclaration <|>
-                   pJImplementation <|> pJCategory <|> pJImport
+pSourceElement = notFollowedBy (pReserved "function" <* pIdent) *> pSEStatement <|>
+                   pFunctionDeclaration <|>  pJImplementation <|> pJCategory <|>
+                   pJImport
 
 pSEStatement = SEStatement <$> pStatement
 
