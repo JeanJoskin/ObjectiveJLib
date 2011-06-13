@@ -25,18 +25,18 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 
-module Language.JsLib.Parser.Parser (parse) where
+module Language.ObjectiveJLib.Parser.Parser (parse) where
 
 import Text.ParserCombinators.Parsec hiding (parse,many,(<|>))
 import Text.ParserCombinators.Parsec.Pos
-import Language.JsLib.Scanner.Tokens
-import Language.JsLib.AST
+import Language.ObjectiveJLib.Scanner.Tokens
+import Language.ObjectiveJLib.AST
 import Control.Applicative
-import Language.JsLib.Parser.Prim
+import Language.ObjectiveJLib.Parser.Prim
 import Data.Map (Map)
 import Data.List (intersperse)
 import qualified Data.Map as Map
-import Language.JsLib.StringUtil
+import Language.ObjectiveJLib.StringUtil
 
 pArguments :: JsParser [Expression]
 pArguments = pPack "(" (pCommaList pAssignmentExpression) ")"

@@ -27,7 +27,7 @@
 --
 }
 
-MODULE {Language.JsLib.Printer.Pretty} {printPrettyToString,printPretty} {}
+MODULE {Language.ObjectiveJLib.Printer.Pretty} {printPrettyToString,printPretty} {}
 
 PRAGMA genlinepragmas
 
@@ -36,10 +36,10 @@ INCLUDE "../AST.ag"
 imports
 {
 import Text.PrettyPrint.HughesPJ
-import Language.JsLib.AST hiding (Ident,Number)
-import Language.JsLib.Printer.Util
+import Language.ObjectiveJLib.AST hiding (Ident,Number)
+import Language.ObjectiveJLib.Printer.Util
 import Data.Maybe (isNothing,catMaybes)
-import Language.JsLib.StringUtil
+import Language.ObjectiveJLib.StringUtil
 }
 
 {

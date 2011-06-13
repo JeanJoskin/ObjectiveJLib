@@ -1,9 +1,9 @@
-module Language.JsLib.Parser.Prim where
+module Language.ObjectiveJLib.Parser.Prim where
 
 import Text.ParserCombinators.Parsec hiding (many,(<|>))
 import Text.ParserCombinators.Parsec.Pos
-import Language.JsLib.Scanner.Tokens
-import Language.JsLib.AST
+import Language.ObjectiveJLib.Scanner.Tokens
+import Language.ObjectiveJLib.AST
 import Control.Applicative
 
 type JsParser a = GenParser Token UserState a

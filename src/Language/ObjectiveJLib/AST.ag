@@ -1,4 +1,4 @@
-MODULE {Language.JsLib.AST} {} {}
+MODULE {Language.ObjectiveJLib.AST} {} {}
 
 {
 --
@@ -282,8 +282,8 @@ SET AllNtExTop = SourceElement PropertyAssignment PropertyName Expression
                  Decl ForClause CaseClause CatchClause Statement AssignOp
                  FunctionBody Expressions PropertyAssignments Arguments Statements
                  Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
-                 JMember JImplementationElement JTy JMethodParam JArg JAccessors
-                 JArgs JIVar JImplementationElements JMethodParams JParam MbJParam
+                 JIVar JImplementationElement JTy JMethodParam JArg JAccessors
+                 JArgs JIVars JImplementationElements JMethodParams JParam MbJParam
                  MbJAccessors
 SET AllNt = NtTop AllNtExTop
 

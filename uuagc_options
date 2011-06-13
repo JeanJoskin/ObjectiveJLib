@@ -1,5 +1,5 @@
-file : "src/Language/JsLib/AST.ag"
+file : "src/Language/ObjectiveJLib/AST.ag"
 options : data
 
-file : "src/Language/JsLib/Printer/Pretty.ag"
+file : "src/Language/ObjectiveJLib/Printer/Pretty.ag"
 options : catas, signatures, semfuns, wrappers

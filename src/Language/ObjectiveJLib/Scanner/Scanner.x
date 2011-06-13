@@ -26,10 +26,10 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 
-module Language.JsLib.Scanner.Scanner (scan) where
+module Language.ObjectiveJLib.Scanner.Scanner (scan) where
 
 import Text.ParserCombinators.Parsec.Pos
-import Language.JsLib.Scanner.Tokens
+import Language.ObjectiveJLib.Scanner.Tokens
 }
 -------------------------------------------------------------------------------
 -- Character groups

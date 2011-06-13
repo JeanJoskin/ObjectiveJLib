@@ -25,7 +25,7 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 
-module Language.JsLib.Printer.Util where
+module Language.ObjectiveJLib.Printer.Util where
 
 import Text.PrettyPrint.HughesPJ
 import Data.List

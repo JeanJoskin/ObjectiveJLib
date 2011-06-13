@@ -1,4 +1,4 @@
-module Language.JsLib.StringUtil
+module Language.ObjectiveJLib.StringUtil
 ( readNumeric
 , readQuotedString
 , writeQuotedString

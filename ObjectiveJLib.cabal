@@ -15,15 +15,15 @@ Library
      hs-source-dirs:    src
      Build-Depends:     base >= 4.2 && <5, parsec >= 3, pretty, array, containers
      Build-tools:       alex
-     Exposed-modules:   Language.JsLib
-                        Language.JsLib.AST
-                        Language.JsLib.Scanner
-                        Language.JsLib.Parser
-                        Language.JsLib.Printer
-                        Language.JsLib.Scanner.Tokens
-                        Language.JsLib.Scanner.Scanner
-                        Language.JsLib.Parser.Parser
-                        Language.JsLib.Parser.Prim
-                        Language.JsLib.Printer.Pretty
-                        Language.JsLib.Printer.Util
-     Other-modules:     Language.JsLib.StringUtil
+     Exposed-modules:   Language.ObjectiveJLib
+                        Language.ObjectiveJLib.AST
+                        Language.ObjectiveJLib.Scanner
+                        Language.ObjectiveJLib.Parser
+                        Language.ObjectiveJLib.Printer
+                        Language.ObjectiveJLib.Scanner.Tokens
+                        Language.ObjectiveJLib.Scanner.Scanner
+                        Language.ObjectiveJLib.Parser.Parser
+                        Language.ObjectiveJLib.Parser.Prim
+                        Language.ObjectiveJLib.Printer.Pretty
+                        Language.ObjectiveJLib.Printer.Util
+     Other-modules:     Language.ObjectiveJLib.StringUtil
