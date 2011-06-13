@@ -1,12 +1,12 @@
-Name:                JsLib
+Name:                ObjectiveJLib
 Version:             0.5
-Description:         Strict ECMAScript (JavaScript) edition 5 parser library for Haskell
+Description:         JsLib with Objective-J language extensions
 License:             BSD3
 License-file:        LICENSE
 Author:              Jean Joskin
 Maintainer:          jean@joskin.nl
 Copyright:           Copyright (c) 2011, Jean Joskin
-Homepage:            https://github.com/JeanJoskin/JsLib
+Homepage:            https://github.com/JeanJoskin/ObjectiveJLib
 Stability:           Experimental
 Build-Type:          Simple
 Cabal-Version:       >=1.2
