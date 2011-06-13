@@ -402,7 +402,7 @@ pJImplementation = notFollowedBy (pReserved "@implementation" <* pIdent <* pPack
 
 pJImplementation' = SEImplementation <$
                      pReserved "@implementation" <*> pIdent <*> pMaybe (pReserved ":" *> pIdent) <*>
-                     option [] (pPack "{" (many pJMember)  "}") <*>
+                     option [] (pPack "{" (many pJIVar)  "}") <*>
                      many pJImplementationElement <*
                      pReserved "@end"
 
@@ -413,9 +413,9 @@ pJCategory = SECategory <$
                many pJImplementationElement <*
                pReserved "@end"
 
--- Objective-J: Member declaration
-pJMember :: JsParser JMember
-pJMember = JMember <$> pJTy <*> pIdent <*> pMaybe pJAccessors <* pSemi
+-- Objective-J: IVar declaration
+pJIVar :: JsParser JIVar
+pJIVar = JIVar <$> pJTy <*> pIdent <*> pMaybe pJAccessors <* pSemi
 
 pJAccessors :: JsParser JAccessors
 pJAccessors = (\m -> JAccessors (Map.lookup "property" m)

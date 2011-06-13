@@ -268,12 +268,12 @@ SEM CaseClause [ | | pp : {Doc} ]
 -- Objective J
 -------------------------------------------------------------------------------
 
-ATTR JArgs JMethodParams JImplementationElements JMembers [ | | pp USE {:} {[]} : {[Doc]} ]
+ATTR JArgs JMethodParams JImplementationElements JIVars [ | | pp USE {:} {[]} : {[Doc]} ]
 
 SEM SourceElement
   | SEImplementation lhs.pp = text "@implementation" <+> text @ident <+>
                                 case @extends of { (Just e) -> text ":" <+> text e; _ -> empty } $+$
-                                blockBraces (vcat @members.pp) $+$
+                                blockBraces (vcat @ivars.pp) $+$
                                 vcat @body.pp $+$
                                 text "@end"
   | SECategory lhs.pp = text "@implementation" <+> text @extends <+>
@@ -308,8 +308,8 @@ SEM JArg [ | | pp : {Doc} ]
   | JArg lhs.pp = text @name <>
                     (if isEmpty @value.pp then empty else colon <> @value.pp)
 
-SEM JMember [ | | pp : {Doc} ]
-  | JMember lhs.pp = @ty.pp <+> text @ident <+> @accessors.pp <> semi
+SEM JIVar [ | | pp : {Doc} ]
+  | JIVar lhs.pp = @ty.pp <+> text @ident <+> @accessors.pp <> semi
 
 SEM JTy [ | | pp : {Doc} ]
   | JTyObject   lhs.pp = text @ident

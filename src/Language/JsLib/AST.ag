@@ -46,7 +46,7 @@ DATA SourceElement
   | SEFunctionDecl ident: Ident params : {[Ident]} body : FunctionBody
   | SEImplementation ident : Ident
                      extends : (Maybe Ident)
-                     members : JMembers
+                     ivars : JIVars
                      body : JImplementationElements
   | SECategory extends : Ident
                ident : Ident
@@ -227,10 +227,10 @@ TYPE JArgs = [JArg]
 DATA JArg
   | JArg name : Ident value : MbExpression
 
-TYPE JMembers = [JMember]
+TYPE JIVars = [JIVar]
 
-DATA JMember
-  | JMember ty : JTy ident : Ident accessors : MbJAccessors
+DATA JIVar
+  | JIVar ty : JTy ident : Ident accessors : MbJAccessors
 
 TYPE JImplementationElements = [JImplementationElement]
 
@@ -283,7 +283,7 @@ SET AllNtExTop = SourceElement PropertyAssignment PropertyName Expression
                  FunctionBody Expressions PropertyAssignments Arguments Statements
                  Decls MbDeclExpr MbExpression MbStatement CaseClauses MbCatchClause
                  JMember JImplementationElement JTy JMethodParam JArg JAccessors
-                 JArgs JMembers JImplementationElements JMethodParams JParam MbJParam
+                 JArgs JIVar JImplementationElements JMethodParams JParam MbJParam
                  MbJAccessors
 SET AllNt = NtTop AllNtExTop
 
