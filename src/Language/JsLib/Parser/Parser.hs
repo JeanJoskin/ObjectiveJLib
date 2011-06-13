@@ -36,6 +36,7 @@ import Language.JsLib.Parser.Prim
 import Data.Map (Map)
 import Data.List (intersperse)
 import qualified Data.Map as Map
+import Language.JsLib.StringUtil
 
 pArguments :: JsParser [Expression]
 pArguments = pPack "(" (pCommaList pAssignmentExpression) ")"
@@ -54,7 +55,7 @@ pLiteral = pENull <|> pEBool <|> pENumeric <|> pEString <?> "literal"
 pENull = ENull <$ pReserved "null"
 pEBool = EBool <$> anyOp [(True,"true"),(False,"false")]
 pENumeric = ENumeric . readNumeric <$> pValToken TkNumeric
-pEString = EString <$> pValToken TkString
+pEString = EString . readQuotedString <$> pValToken TkString
 
 -- PrimaryExpression (11.1) (+RegExp)
 pPrimaryExpression :: JsParser Expression
@@ -98,6 +99,7 @@ pMemberExpression :: JsParser Expression
 pMemberExpression = pPrimaryExpression <??> pMemberExpressionPost <|>
                       pEFunction <??> pMemberExpressionPost <|>
                       pENew <??> pMemberExpressionPost
+                      <?> "member expression"
 
 pMemberExpressionPost :: JsParser (Expression -> Expression)
 pMemberExpressionPost = flip (.) <$> pEIndex <*> option id pMemberExpressionPost <|>
@@ -105,9 +107,9 @@ pMemberExpressionPost = flip (.) <$> pEIndex <*> option id pMemberExpressionPost
 
 pEFunction = EFunction <$ pReserved "function" <*> pMaybe pIdent
                  <*> pPack "(" (pCommaList pIdent) ")"
-                 <*> pPack "{" pFunctionBody "}" <?> "function definition"
-pENew = ENew <$ pReserved "new" <*> pMemberExpression <*> option [] pArguments <?> "new"
-pEIndex = flip EIndex <$> pPack "[" pExpression "]" <?> "index"
+                 <*> pPack "{" pFunctionBody "}"
+pENew = ENew <$ pReserved "new" <*> pMemberExpression <*> option [] pArguments
+pEIndex = flip EIndex <$> pPack "[" pExpression "]"
 pEDot = flip EDot <$ pReserved "." <*> pIdent
 
 -- CallExpression (11.2) (modified)
@@ -122,13 +124,13 @@ pCallExpressionPost = flip (.) <$> pCECall <*> option id pCallExpressionPost <|>
 
 pCECallMemberExpr = pMemberExpression <??> (flip ECall <$> pArguments)
 
-pCECall = flip ECall <$> pArguments
-pCEIndex = flip EIndex <$ notFollowedBy pEJMessage <*> pPack "[" pExpression "]"
-pCEDot = flip EDot <$ pReserved "." <*> pIdent
+pCECall = flip ECall <$> pArguments <?> "call braces"
+pCEIndex = flip EIndex <$ notFollowedBy pEJMessage <*> pPack "[" pExpression "]" <?> "index backets"
+pCEDot = flip EDot <$ pReserved "." <*> pIdent <?> "property dot"
 
 -- LeftHandSideExpression (11.2) (modified)
 pLeftHandSideExpression :: JsParser Expression
-pLeftHandSideExpression =  pCallExpression
+pLeftHandSideExpression =  pCallExpression <?> "left hand side expression"
 
 -- PostFixExpression (11.3)
 postfixOps = anyOp [(EPostInc,"++"),(EPostDec,"--")] <?> "postfix operator"
@@ -198,34 +200,38 @@ pStatement = pBlock <|> pVariableStatement <|> pEmptyStatement <|>
                pContinueStatement <|> pBreakStatement <|> pReturnStatement <|>
                pWithStatement <|> pSwitchStatement <|> pLabelledStatement <|>
                pThrow <|> pTry <|> pDebugger <|> pExpressionStatement
+               <?> "statement"
 
 -- Block (12.1)
 pBlock :: JsParser Statement
-pBlock = SBlock <$> pPack "{" (many pStatement) "}"
+pBlock = SBlock <$> pPack "{" (many pStatement) "}" <?> "block statement"
 
 -- VariableStatement (12.2)
 pVariableStatement :: JsParser Statement
 pVariableStatement = SVariable <$ pReserved "var" <*> pCommaList pVariableDeclaration <* pSemi
+                     <?> "variable statement"
 
 -- VariableDeclaration (12.2)
 pVariableDeclaration :: JsParser Decl
-pVariableDeclaration = Decl <$> pIdent <*> (pMaybe pInitializer)
+pVariableDeclaration = Decl <$> pIdent <*> (pMaybe pInitializer) <?> "variable declaration"
   where
     pInitializer = pReserved "=" *> pAssignmentExpression
 
 -- EmptyStatement (12.3)
 pEmptyStatement :: JsParser Statement
-pEmptyStatement = SEmpty <$ pReserved ";"
+pEmptyStatement = SEmpty <$ pReserved ";" <?> "empty statement"
 
 -- ExpressionStatement (12.4)
 pExpressionStatement :: JsParser Statement
 pExpressionStatement =  SExpression <$ notFollowedBy (pReserved "function") <*>
                           pExpression <* pSemi
+                          <?> "expression"
 
 -- IfStatement (12.5)
 pIfStatement :: JsParser Statement
 pIfStatement = SIf <$ pReserved "if" <*> pPack "(" pExpression ")" <*> 
-	             pStatement <*> pMaybe (pReserved "else" *> pStatement)
+                 pStatement <*> pMaybe (pReserved "else" *> pStatement)
+                 <?> "if statement"
 
 -- IterationStatement (12.6)
 pIterationStatement :: JsParser Statement
@@ -233,13 +239,16 @@ pIterationStatement = pSDoWhile <|> pSWhile <|> pSFor
 
 pSDoWhile = SDoWhile <$ pReserved "do" <*> pStatement <* pReserved "while" <*>
               pPack "(" pExpression ")" <* pSemi
+              <?> "do-while statement"
 pSWhile = SWhile <$ pReserved "while" <*> pPack "(" pExpression ")" <*>
               pStatement
+              <?> "while statement"
 pSFor = SFor <$ pReserved "for" <*> pPack "(" pForClause ")" <*> pStatement
+              <?> "for statement"
 
 
 pForClause :: JsParser ForClause
-pForClause = try pFCExprExprExpr <|> try pFCVarExprExpr <|> try pFCLhsIn <|> pFCVarIn
+pForClause = try pFCExprExprExpr <|> try pFCVarExprExpr <|> try pFCLhsIn <|> pFCVarIn <?> "for clause"
 
 pFCExprExprExpr = FCExprExprExpr <$> pMaybe pExpression <* pReserved ";" <*>
                     pMaybe pExpression <* pReserved ";" <*> pMaybe pExpression
@@ -253,26 +262,31 @@ pFCVarIn = FCVarIn <$ pReserved "var" <*> pVariableDeclaration <*
 -- ContinueStatement (12.7)
 pContinueStatement :: JsParser Statement
 pContinueStatement = SContinue <$ pReserved "continue" <*> pMaybe pIdent <* pSemi
+                       <?> "continue statement"
 
 -- BreakStatement (12.8)
 pBreakStatement :: JsParser Statement
 pBreakStatement = SBreak <$ pReserved "break" <*> pMaybe pIdent <* pSemi
+                    <?> "break statement"
 
 -- ReturnStatement (12.9)
 pReturnStatement :: JsParser Statement
 pReturnStatement = SReturn <$ pReserved "return" <*> pMaybe pExpression <* pSemi
+                     <?> "return statement"
 
 -- WithStatement (12.10)
 pWithStatement :: JsParser Statement
 pWithStatement = SWith <$ pReserved "with" <*> pPack "(" pExpression ")" <*> pStatement
+                   <?> "with statement"
 
 -- SwitchStatement (12.11)
 pSwitchStatement :: JsParser Statement
 pSwitchStatement = SSwitch <$ pReserved "switch" <*> pPack "(" pExpression ")" <*>
                        pPack "{" (many pCaseClause) "}"
+                         <?> "switch statement"
 
 pCaseClause :: JsParser CaseClause
-pCaseClause = pCCCase <|> pCCDefault
+pCaseClause = pCCCase <|> pCCDefault <?> "case"
 
 pCCCase = CCCase <$ pReserved "case" <*> pExpression <* pReserved ":" <*> many pStatement
 pCCDefault = CCDefault <$ pReserved "default" <* pReserved ":" <*> many pStatement
@@ -280,21 +294,24 @@ pCCDefault = CCDefault <$ pReserved "default" <* pReserved ":" <*> many pStateme
 -- LabelledStatement (12.12)
 pLabelledStatement :: JsParser Statement
 pLabelledStatement = SLabel <$ notFollowedBy pExpression <*> pIdent <* pReserved ":" <*> pStatement
+                       <?> "labelled statement"
 
 -- ThrowStatement (12.13)
 pThrow :: JsParser Statement
 pThrow = SThrow <$ pReserved "throw" <*> pExpression <* pSemi
+           <?> "throw statement"
 
 -- TryStatement (12.14)
 pTry :: JsParser Statement
 pTry = STry <$ pReserved "try" <*> pBlock <*> pMaybe pCatch <*> pMaybe pFinally
+         <?> "try statement"
 
-pCatch = CatchClause <$ pReserved "catch" <*> pPack "(" pIdent ")" <*> pBlock
-pFinally = pReserved "finally" *> pBlock
+pCatch = CatchClause <$ pReserved "catch" <*> pPack "(" pIdent ")" <*> pBlock <?> "catch"
+pFinally = pReserved "finally" *> pBlock <?> "finally"
 
 -- DebuggerStatement (12.15)
 pDebugger :: JsParser Statement
-pDebugger = SDebugger <$ pReserved "debugger" <* pSemi
+pDebugger = SDebugger <$ pReserved "debugger" <* pSemi <?> "debugger statement"
 
 -------------------------------------------------------------------------------
 -- Objective J
@@ -466,10 +483,11 @@ pFunctionDeclaration :: JsParser SourceElement
 pFunctionDeclaration = SEFunctionDecl <$ pReserved "function" <*> pIdent <*>
                          pPack "(" (pCommaList pIdent) ")" <*>
                          pPack "{" pFunctionBody "}"
+                         <?> "function declaration"
 
 -- Program (14)
 pProgram :: JsParser Program
-pProgram = Program <$> many pSourceElement
+pProgram = Program <$> many pSourceElement <?> "program"
 
 -- SourceElement (14)
 pSourceElement :: JsParser SourceElement

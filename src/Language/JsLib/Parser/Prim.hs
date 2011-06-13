@@ -76,7 +76,3 @@ pSemi = do
           if (permissiveSemicolon s)
             then option ";" (pReserved ";")
             else pReserved ";"
-
-readNumeric :: String -> Double
-readNumeric s | head s == '.' = read ('0':s)
-              | otherwise     = read s

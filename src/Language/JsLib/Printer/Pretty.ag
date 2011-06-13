@@ -39,6 +39,7 @@ import Text.PrettyPrint.HughesPJ
 import Language.JsLib.AST hiding (Ident,Number)
 import Language.JsLib.Printer.Util
 import Data.Maybe (isNothing,catMaybes)
+import Language.JsLib.StringUtil
 }
 
 {
@@ -134,7 +135,7 @@ SEM Expression
   | ENull        lhs.pp = text "null"
   | EBool        lhs.pp = text (if @value then "true" else "false")
   | ENumeric     lhs.pp = prettyNum @value
-  | EString      lhs.pp = text @value
+  | EString      lhs.pp = text (writeQuotedString @value)
   | ERegExp      lhs.pp = text @regexp
   | EArray       lhs.pp = lbrack <> vSepList comma @exprs.pp <> rbrack
   | EObject      lhs.pp = objectBraces (vSepList comma @props.pp)
@@ -143,7 +144,10 @@ SEM Expression
                             blockBraces (vcat @body.pp)
   | EIndex       lhs.pp = @expr.pp <> brackets @index.pp
   | EDot         lhs.pp = @expr.pp <> text "." <> text @propertyName
-  | ENew         lhs.pp = text "new" <+> @expr.pp <> parens (commaList @args.pp)
+  | ENew         lhs.pp = text "new" <+> @expr.pp <> 
+                            if null @args.pp
+                            then empty
+                            else parens (commaList @args.pp)
   | ECall        lhs.pp = @expr.pp <> parens (commaList @args.pp)
   | EComma       lhs.pp = @hd.pp <> text ", " <> @tl.pp
   | EPostInc     lhs.pp = @expr.pp <> text "++"

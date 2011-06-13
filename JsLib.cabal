@@ -26,4 +26,4 @@ Library
                         Language.JsLib.Parser.Prim
                         Language.JsLib.Printer.Pretty
                         Language.JsLib.Printer.Util
-
+     Other-modules:     Language.JsLib.StringUtil
