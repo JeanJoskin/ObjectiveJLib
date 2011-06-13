@@ -1,29 +1,28 @@
-Js&#955;ib
+ObjectiveJ&#955;ib
 ================================
 
-Strict ECMAScript edition 5 (JavaScript) parser library for Haskell.
+ObjectiveJ parsing and printing library for Haskell.
 
-- Implemented: full grammar specification. Altough not thoroughly tested yet.
-- Current status: under development
+Features:
+
+- Fast parser
+- Full syntax parsing (including types, unescaping strings)
+- Optional semi-colons
+- Nicely formatted, human readable, pretty printing output
 
 Build instructions
 ------------------
 
 1.  Make sure all dependencies are present:
 
-    `cabal install uuagc parsec array pretty`
+    `cabal install uuagc parsec array pretty containers`
 
-2.  Build Js&#955;ib:
+2.  Build ObjectiveJ&#955;ib:
 
     `runhaskell Setup.hs configure`
 
     `runhaskell Setup.hs build`
 
-3.  Install Js&#955;ib:
+3.  Install ObjectiveJ&#955;ib:
 
     `runhaskell Setup.hs install`
-
-API Documentation
------------------
-
-Generated API docs are available on <http://JeanJoskin.github.com/JsLib>.
