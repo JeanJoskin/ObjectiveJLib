@@ -16,6 +16,7 @@ hexChars = "0123456789ABCDEF"
 
 readNumeric :: String -> Double
 readNumeric s | head s == '.' = read ('0':s)
+              | last s == '.' = read (s ++ "0")
               | otherwise     = read s
 
 escapeChars = [ ('b','\b'), ('f','\f'), ('n','\n'), ('r','\r'), ('t','\t'), ('v','\v') ]
