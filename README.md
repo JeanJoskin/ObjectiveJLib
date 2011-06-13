@@ -7,7 +7,7 @@ Features:
 
 - Fast parser
 - Full syntax parsing (including types, unescaping strings)
-- Optional semi-colons
+- Optional semicolons
 - Nicely formatted, human readable, pretty printing output
 
 Build instructions
