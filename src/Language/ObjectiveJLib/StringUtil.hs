@@ -38,7 +38,7 @@ readString (x:xs) = x : readString xs
 
 writeString :: Char -> String -> String
 writeString q [] = []
-writeString q (x:xs) | x == q                 = '\\':q:writeString q xs
+writeString q (x:xs) | x == q || x == '\\'    = '\\':x:writeString q xs
                      | isAscii x && isPrint x = x : writeString q xs
                      | isLatin1 x             = ('\\':'x':pad '0' 2 (hex x')) ++ writeString q xs
                      | otherwise              = ('\\':'u':pad '0' 4 (hex x')) ++ writeString q xs
