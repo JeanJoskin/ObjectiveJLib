@@ -287,7 +287,7 @@ SEM Expression
                                   (if null @varArgs.pp then empty else comma <+> (commaList @varArgs.pp))
                                 )
   | EJSelector lhs.pp = text "@selector" <> parens (hcat $ map (\(f,c) -> text f <> if c then colon else empty) @fields)
-  | EJString  lhs.pp = text "@" <> text @value
+  | EJString  lhs.pp = text "@" <> text (writeQuotedString @value)
   | EJNil     lhs.pp = text "nil"
   | EJSuper   lhs.pp = text "super"
   | EJSelf    lhs.pp = text "self"

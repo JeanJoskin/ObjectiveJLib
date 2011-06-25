@@ -374,7 +374,7 @@ pJTyArray = JTyArray <$ pReserved "[" <* pReserved "]"
 
 -- Objective-J: CPString
 pEJString :: JsParser Expression
-pEJString = EJString <$ pReserved "@" <*> pValToken TkString
+pEJString = EJString . readQuotedString <$ pReserved "@" <*> pValToken TkString
 
 -- Objective-J: message
 pEJMessage :: JsParser Expression
